@@ -72,18 +72,28 @@ def extract_demande_number(pdf_path, target_pages=[0, 1, 2]):
                 raw_text = pytesseract.image_to_string(processed_img, lang='fra+eng', config=custom_config)
                 raw_text_extracted += f"--- Page {page_num+1} ---\n{raw_text}\n"
                 
-                # Chercher le pattern
+                # Amélioration de l'extraction : on cherche explicitement "Commande" ou "Demande"
+                # suivi de caractères alphanumériques
+                advanced_pattern = re.compile(r'(?:commande|demande|cmd|order|n\s*°)[^\w]*([A-Z0-9-]{7,15})', re.IGNORECASE)
+                adv_matches = advanced_pattern.findall(raw_text)
+                
+                if adv_matches:
+                    extracted_demande = adv_matches[0]
+                    confidence = 90
+                    break
+                
+                # Chercher le pattern basique (8 à 10 chiffres)
                 matches = pattern.findall(raw_text)
                 if matches:
-                    # On prend le premier numéro long trouvé (souvent le numéro de commande/demande)
                     extracted_demande = matches[0]
-                    confidence = 90  # Confiance élevée si trouvé
-                    break # On s'arrête dès qu'on a trouvé
+                    confidence = 80
+                    break
             except Exception as e:
                 error_msg = f"Erreur Tesseract: {str(e)}"
                 break
                 
         pdf_document.close()
+        print(f"=== OCR TEXT EXTRACTED ===\n{raw_text_extracted}\n==========================")
         
     except Exception as e:
         error_msg = f"Erreur de lecture PDF: {str(e)}"
