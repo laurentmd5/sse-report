@@ -23,13 +23,11 @@ def preprocess_image(image_bytes):
     # 1. Grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     
-    # 2. Equalize Histogram (Contraste)
-    equalized = cv2.equalizeHist(gray)
+    # 2. Denoise léger
+    blurred = cv2.GaussianBlur(gray, (3, 3), 0)
     
-    # 3. Denoise (Median Blur)
-    blurred = cv2.medianBlur(equalized, 3)
-    
-    # 4. Binarisation (Otsu Thresholding)
+    # 3. Thresholding (Binarisation)
+    # Otsu's thresholding fonctionne mieux sans l'égalisation d'histogramme sur des documents scannés
     _, binary = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     
     return binary
