@@ -377,9 +377,23 @@ table.data td.client{color:var(--text-primary); font-weight:500;}
 .modal-title { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 600; margin-bottom: 20px; }
 .modal-actions { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
 
-@media (max-width:720px){
-  .admin-grid{grid-template-columns:repeat(2,1fr);}
-  .stats-row{grid-template-columns:1fr;}
-  table.data{display:block; overflow-x:auto;}
-  .bars{gap:12px;}
+@media (max-width: 768px) {
+  .admin-grid { grid-template-columns: repeat(2, 1fr); }
+  .stats-row { grid-template-columns: 1fr; }
+  table.data { display: block; overflow-x: auto; white-space: nowrap; }
+  .recap-table { display: block; overflow-x: auto; white-space: nowrap; }
+  .bars { gap: 12px; }
+  .topbar { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .panel-actions { flex-direction: column; }
+  .btn-export { width: 100%; text-align: center; }
+}
+
+@media (max-width: 480px) {
+  .admin-grid { grid-template-columns: 1fr; }
+  .val-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .val-row .field-name { width: 100%; }
+  .val-row .field-val { width: 100%; }
+  .source-tag { margin-left: 0; align-self: flex-start; }
+  .bcbar { padding: 9px 12px; font-size: 10.5px; flex-wrap: wrap; }
+  #screen-login { padding: 40px 15px; }
 }
