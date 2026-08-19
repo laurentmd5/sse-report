@@ -52,11 +52,10 @@ pipeline {
                     sshagent(credentials: [VPS_SSH_CREDENTIALS_ID]) {
                         
                         // 1. Création des répertoires nécessaires sur le VPS
-                        sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'mkdir -p ${DEPLOY_PATH}/nginx'"
+                        sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'mkdir -p ${DEPLOY_PATH}'"
                         
                         // 2. Copie des fichiers de configuration vers le VPS
                         sh "scp -o StrictHostKeyChecking=no ${COMPOSE_FILE} ${VPS_USER}@${VPS_HOST}:${DEPLOY_PATH}/${COMPOSE_FILE}"
-                        sh "scp -o StrictHostKeyChecking=no nginx/default.conf ${VPS_USER}@${VPS_HOST}:${DEPLOY_PATH}/nginx/default.conf"
                         
                         // 3. Mise à jour et redémarrage des conteneurs
                         sh """
