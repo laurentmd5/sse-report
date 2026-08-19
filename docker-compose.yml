@@ -11,7 +11,7 @@ services:
       - FLASK_ENV=production
       - SECRET_KEY=clef-secrete-en-production-a-changer
       # Connexion à la base de données MySQL dans Docker
-      - SQLALCHEMY_DATABASE_URI=mysql+pymysql://suivi_user:suivi_password@db/suivi_ftth
+      - DATABASE_URL=mysql+pymysql://suivi_user:suivi_password@db/suivi_ftth
     depends_on:
       - db
     volumes:
