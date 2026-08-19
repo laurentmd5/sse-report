@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Connexion - Suivi FTTH{% endblock %}
+
+{% block content %}
+<section id="screen-login">
+  <div class="login-card">
+    <div class="login-wordmark">
+      <span class="dot"></span>
+      <span class="txt">SUIVI <span>FTTH</span></span>
+    </div>
+    <div class="login-sub">Interventions réseau · Fibre optique</div>
+
+    <form method="POST" action="{{ url_for('auth.login') }}">
+        <div class="field">
+          <label for="username">Identifiant</label>
+          <input type="text" id="username" name="username" placeholder="ex. adiouf" required autofocus>
+        </div>
+        <div class="field">
+          <label for="password">Mot de passe</label>
+          <input type="password" id="password" name="password" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn-primary">Se connecter</button>
+    </form>
+
+    <div class="login-foot">Accès réservé aux chefs d'équipe et administrateurs</div>
+  </div>
+</section>
+{% endblock %}

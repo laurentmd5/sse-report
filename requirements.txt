@@ -1,0 +1,14 @@
+Flask
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-Login
+Flask-Bcrypt
+PyMySQL
+cryptography
+python-dotenv
+PyMuPDF
+opencv-python
+pytesseract
+openpyxl
+gunicorn  
+ 

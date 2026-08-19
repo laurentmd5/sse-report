@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{% block title %}Suivi FTTH{% endblock %}</title>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <!-- Arrière-plan fibre -->
+    <div class="bg-fiber">
+      <svg viewBox="0 0 1200 800" preserveAspectRatio="none">
+        <path class="fiber-strand" d="M-50,120 C 250,60 450,220 750,140 S 1150,60 1300,160" style="animation-delay:0s"/>
+        <path class="fiber-strand orange" d="M-50,420 C 300,480 500,340 800,420 S 1150,500 1300,400" style="animation-delay:1.2s"/>
+        <path class="fiber-strand" d="M-50,650 C 280,600 520,720 820,640 S 1150,560 1300,660" style="animation-delay:2.4s"/>
+      </svg>
+    </div>
+
+    <!-- Messages Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+                <div class="flash-msg {{ category }}" onclick="this.remove()">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Contenu Principal -->
+    <div class="screen">
+        {% block content %}{% endblock %}
+    </div>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

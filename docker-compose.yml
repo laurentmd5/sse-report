@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: suivi_ftth_web
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=clef-secrete-en-production-a-changer
+      # Connexion à la base de données MySQL dans Docker
+      - SQLALCHEMY_DATABASE_URI=mysql+pymysql://suivi_user:suivi_password@db/suivi_ftth
+    depends_on:
+      - db
+    volumes:
+      - uploads_volume:/app/uploads
+
+  db:
+    image: mysql:8.0
+    container_name: suivi_ftth_db
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=suivi_ftth
+      - MYSQL_USER=suivi_user
+      - MYSQL_PASSWORD=suivi_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_volume:/var/lib/mysql
+
+volumes:
+  db_volume:
+  uploads_volume:

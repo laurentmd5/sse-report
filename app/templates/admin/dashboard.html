@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Administrateur{% endblock %}
+
+{% block content %}
+<div class="bcbar signal">
+  <span class="pulse-dot"></span>
+  <span class="seg strong">Dashboard Administration</span>
+  <span class="sep">/</span>
+  <span class="seg">{{ month }}</span>
+</div>
+
+<div class="app-shell">
+  <div class="topbar">
+    <div class="who">
+      <div class="avatar" style="color:var(--fiber)">AD</div>
+      <div>
+        <div class="name">Administration</div>
+        <div class="role">Vue globale</div>
+      </div>
+    </div>
+    <div>
+        <a href="{{ url_for('admin.manage_teams') }}" class="btn-ghost" style="margin-right:8px;">Gérer Équipes</a>
+        <a href="{{ url_for('auth.logout') }}" class="btn-ghost danger">Déconnexion</a>
+    </div>
+  </div>
+
+  <div class="admin-grid">
+    <div class="kpi">
+        <div class="val" style="color:var(--signal)">{{ stats.total }}</div>
+        <div class="lbl">Total Interventions</div>
+    </div>
+    
+    {% set top_task = stats.task_stats|dictsort(false, 'value', reverse=true)|first %}
+    <div class="kpi">
+        <div class="val">{{ top_task[1] if top_task else 0 }}</div>
+        <div class="lbl">Top Tâche ({{ top_task[0] if top_task else '-' }})</div>
+    </div>
+    
+    {% set top_team = stats.team_stats|dictsort(false, 'value', reverse=true)|first %}
+    <div class="kpi">
+        <div class="val" style="color:var(--fiber)">{{ top_team[1] if top_team else 0 }}</div>
+        <div class="lbl">Meilleure Équipe ({{ top_team[0] if top_team else '-' }})</div>
+    </div>
+    
+    <!-- KPI 4: Pending (This requires calculating pending interventions, let's keep it simple for now or fetch it from DB. I'll just show 0 as placeholder for now since stats don't return pending count). -->
+    <div class="kpi">
+        <div class="val" style="color:var(--warn)">-</div>
+        <div class="lbl">En attente (WIP)</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Performance par équipe</h3>
+    <div class="bars">
+        {% if stats.cross_table|length == 0 %}
+            <div style="text-align:center; width:100%; color:var(--text-tertiary);">Aucune donnée pour ce mois.</div>
+        {% else %}
+            {% set max_total = namespace(val=1) %}
+            {% for team_row in stats.cross_table %}
+                {% if team_row.total > max_total.val %}{% set max_total.val = team_row.total %}{% endif %}
+            {% endfor %}
+            
+            {% for team_row in stats.cross_table %}
+            <div class="bar-col">
+              <span class="bnum">{{ team_row.total }}</span>
+              <div class="bar-track">
+                  <!-- Calculer le pourcentage -->
+                  {% set height_pct = (team_row.total / max_total.val) * 100 %}
+                  <div class="bar-fill" style="height:{{ height_pct }}%"></div>
+              </div>
+              <span class="bname">{{ team_row.team_name }}</span>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Rapport mensuel — {{ month }}</h3>
+    <div style="overflow-x:auto;">
+        <table class="recap-table">
+          <thead>
+            <tr>
+                <th>Tâche</th>
+                {% for team_row in stats.cross_table %}
+                <th>{{ team_row.team_name }}</th>
+                {% endfor %}
+                <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for task in stats.report_tasks %}
+            <tr>
+                <td>{{ task }}</td>
+                {% set task_total = namespace(val=0) %}
+                {% for team_row in stats.cross_table %}
+                    {% set val = team_row.tasks[task] %}
+                    <td>{{ val if val > 0 else '-' }}</td>
+                    {% set task_total.val = task_total.val + val %}
+                {% endfor %}
+                <td style="font-weight:700; color:var(--text-primary);">{{ task_total.val }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="{{ stats.cross_table|length + 2 }}" style="text-align:center;">Aucune intervention enregistrée ce mois-ci.</td></tr>
+            {% endfor %}
+            
+            {% if stats.report_tasks %}
+            <tr class="total">
+                <td>Total Général</td>
+                {% for team_row in stats.cross_table %}
+                <td>{{ team_row.total }}</td>
+                {% endfor %}
+                <td>{{ stats.total }}</td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+    </div>
+    
+    <div class="panel-actions">
+      <a href="{{ url_for('main.export_excel') }}" class="btn-export">↓ Exporter Excel</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

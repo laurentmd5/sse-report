@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suivi FTTH — Maquettes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-void:#0B0F14;
+    --bg-surface:#121821;
+    --bg-surface-2:#1A222D;
+    --bg-surface-3:#212B38;
+    --border:#2A3341;
+    --border-soft:#1E2733;
+    --text-primary:#E8EDF2;
+    --text-secondary:#8A97A8;
+    --text-tertiary:#5C6779;
+    --signal:#FF7A1A;
+    --signal-dim:#7A3D14;
+    --signal-glow:rgba(255,122,26,0.18);
+    --fiber:#2DD4BF;
+    --fiber-dim:#0F5C54;
+    --fiber-glow:rgba(45,212,191,0.18);
+    --danger:#F0546B;
+    --warn:#F2B84B;
+    --radius:10px;
+    --radius-sm:6px;
+    font-family: 'Inter', sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg-void);
+    color:var(--text-primary);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'JetBrains Mono', monospace;}
+  .display{font-family:'Space Grotesk', sans-serif;}
+
+  /* ---------- Ambient background texture ---------- */
+  .bg-fiber{
+    position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden;
+    opacity:0.5;
+  }
+  .bg-fiber svg{width:100%; height:100%;}
+  .fiber-strand{
+    fill:none; stroke:var(--fiber); stroke-width:1; opacity:0;
+    stroke-dasharray:6 10;
+    animation: fiberFade 8s ease-in-out infinite, fiberFlow 24s linear infinite;
+  }
+  .fiber-strand.orange{stroke:var(--signal);}
+  @keyframes fiberFade{
+    0%,100%{opacity:0;} 50%{opacity:0.35;}
+  }
+  @keyframes fiberFlow{
+    to{stroke-dashoffset:-320;}
+  }
+
+  /* ---------- Top nav (mockup switcher, not part of the product) ---------- */
+  .demo-nav{
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    display:flex; align-items:center; gap:4px;
+    padding:10px 16px;
+    background:rgba(11,15,20,0.9);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border-soft);
+  }
+  .demo-nav .label{
+    font-size:11px; color:var(--text-tertiary); text-transform:uppercase;
+    letter-spacing:0.08em; margin-right:10px; white-space:nowrap;
+  }
+  .demo-tab{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px; letter-spacing:0.03em;
+    padding:7px 13px; border-radius:999px; border:1px solid var(--border);
+    background:transparent; color:var(--text-secondary); cursor:pointer;
+    transition:all .15s ease;
+  }
+  .demo-tab:hover{color:var(--text-primary); border-color:var(--text-tertiary);}
+  .demo-tab.active{
+    background:var(--signal); color:#1A0D02; border-color:var(--signal); font-weight:600;
+  }
+
+  /* ---------- Screens ---------- */
+  .screen{
+    position:relative; z-index:1;
+    display:none;
+    min-height:100vh;
+    padding-top:56px;
+    animation: screenIn .35s ease;
+  }
+  .screen.active{display:block;}
+  @keyframes screenIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+  /* ---------- Signature breadcrumb bar (echoes Senpil banner) ---------- */
+  .bcbar{
+    display:flex; align-items:center; gap:10px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase;
+    padding:9px 20px;
+    color:#0B0F14;
+  }
+  .bcbar.signal{background:linear-gradient(90deg, var(--signal), #FF9A4D);}
+  .bcbar.fiber{background:linear-gradient(90deg, var(--fiber), #6EE7DA); color:#062421;}
+  .bcbar .seg{opacity:0.85;}
+  .bcbar .sep{opacity:0.5;}
+  .bcbar .seg.strong{opacity:1; font-weight:700;}
+  .pulse-dot{
+    width:6px; height:6px; border-radius:50%; background:currentColor;
+    box-shadow:0 0 0 0 currentColor;
+    animation:pulseDot 1.8s ease-out infinite;
+    flex-shrink:0;
+  }
+  @keyframes pulseDot{
+    0%{box-shadow:0 0 0 0 rgba(255,122,26,0.5);}
+    70%{box-shadow:0 0 0 7px rgba(255,122,26,0);}
+    100%{box-shadow:0 0 0 0 rgba(255,122,26,0);}
+  }
+
+  /* =========================================================
+     SCREEN 1 — CONNEXION
+  ========================================================= */
+  #screen-login{display:flex; align-items:center; justify-content:center; padding:80px 20px;}
+  .login-card{
+    width:100%; max-width:380px;
+    background:var(--bg-surface);
+    border:1px solid var(--border-soft);
+    border-radius:var(--radius);
+    padding:38px 34px 30px;
+    position:relative;
+  }
+  .login-wordmark{
+    display:flex; align-items:center; gap:10px; margin-bottom:6px;
+  }
+  .login-wordmark .dot{
+    width:9px; height:9px; border-radius:50%; background:var(--signal);
+    box-shadow:0 0 0 0 rgba(255,122,26,0.5);
+    animation:pulseDot 2s ease-out infinite;
+  }
+  .login-wordmark .txt{
+    font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:19px; letter-spacing:-0.01em;
+  }
+  .login-wordmark .txt span{color:var(--signal);}
+  .login-sub{
+    font-size:12.5px; color:var(--text-tertiary); margin-bottom:30px;
+    font-family:'JetBrains Mono', monospace; letter-spacing:0.02em;
+  }
+  .field{margin-bottom:18px;}
+  .field label{
+    display:block; font-size:11.5px; color:var(--text-secondary);
+    text-transform:uppercase; letter-spacing:0.07em; margin-bottom:7px; font-weight:600;
+  }
+  .field input{
+    width:100%; background:var(--bg-void); border:1px solid var(--border);
+    border-radius:var(--radius-sm); padding:11px 13px; color:var(--text-primary);
+    font-size:14px; font-family:'Inter', sans-serif; transition:border-color .15s;
+  }
+  .field input:focus{outline:none; border-color:var(--signal); box-shadow:0 0 0 3px var(--signal-glow);}
+  .btn-primary{
+    width:100%; padding:12px; border:none; border-radius:var(--radius-sm);
+    background:var(--signal); color:#1A0D02; font-weight:700; font-size:14px;
+    cursor:pointer; margin-top:6px; transition:filter .15s;
+    font-family:'Inter', sans-serif;
+  }
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-primary:focus-visible{outline:2px solid var(--fiber); outline-offset:2px;}
+  .login-foot{
+    margin-top:22px; padding-top:18px; border-top:1px solid var(--border-soft);
+    font-size:11.5px; color:var(--text-tertiary); text-align:center;
+  }
+
+  /* =========================================================
+     SCREEN 2 — ESPACE CHEF D'ÉQUIPE
+  ========================================================= */
+  .app-shell{max-width:1180px; margin:0 auto; padding:26px 24px 60px;}
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:26px;
+  }
+  .who{display:flex; align-items:center; gap:12px;}
+  .avatar{
+    width:38px; height:38px; border-radius:50%; background:var(--bg-surface-3);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:14px; color:var(--signal);
+    border:1px solid var(--border);
+  }
+  .who .name{font-weight:600; font-size:14.5px;}
+  .who .role{font-size:11.5px; color:var(--text-tertiary); font-family:'JetBrains Mono', monospace;}
+  .btn-ghost{
+    padding:9px 15px; border-radius:var(--radius-sm); border:1px solid var(--border);
+    background:transparent; color:var(--text-secondary); font-size:13px; cursor:pointer;
+    font-family:'Inter', sans-serif; transition:all .15s;
+  }
+  .btn-ghost:hover{border-color:var(--text-tertiary); color:var(--text-primary);}
+
+  .dropzone{
+    border:1.5px dashed var(--border);
+    border-radius:var(--radius);
+    padding:38px 20px;
+    text-align:center;
+    background:var(--bg-surface);
+    margin-bottom:30px;
+    transition:border-color .2s, background .2s;
+    cursor:pointer;
+    position:relative;
+  }
+  .dropzone:hover{border-color:var(--signal); background:var(--bg-surface-2);}
+  .dropzone .ico{
+    width:44px; height:44px; margin:0 auto 14px; border-radius:50%;
+    background:var(--signal-glow); display:flex; align-items:center; justify-content:center;
+    color:var(--signal);
+  }
+  .dropzone .main-txt{font-size:14.5px; font-weight:600; margin-bottom:4px;}
+  .dropzone .sub-txt{font-size:12.5px; color:var(--text-tertiary);}
+  .dropzone .fmt{
+    display:inline-block; margin-top:14px; font-family:'JetBrains Mono', monospace;
+    font-size:10.5px; color:var(--text-tertiary); background:var(--bg-void);
+    padding:4px 10px; border-radius:5px; border:1px solid var(--border-soft);
+  }
+
+  .section-head{
+    display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px;
+  }
+  .section-head h2{font-family:'Space Grotesk', sans-serif; font-size:16px; font-weight:600;}
+  .section-head .count{font-size:12px; color:var(--text-tertiary); font-family:'JetBrains Mono', monospace;}
+
+  .stats-row{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:28px;}
+  .stat-card{
+    background:var(--bg-surface); border:1px solid var(--border-soft); border-radius:var(--radius);
+    padding:16px 18px;
+  }
+  .stat-card .val{font-family:'Space Grotesk', sans-serif; font-size:26px; font-weight:700;}
+  .stat-card .val.orange{color:var(--signal);}
+  .stat-card .val.teal{color:var(--fiber);}
+  .stat-card .lbl{font-size:11.5px; color:var(--text-tertiary); margin-top:3px; text-transform:uppercase; letter-spacing:0.05em;}
+
+  table.data{width:100%; border-collapse:collapse; font-size:13px;}
+  table.data thead th{
+    text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em;
+    color:var(--text-tertiary); font-weight:600; padding:0 14px 10px; border-bottom:1px solid var(--border);
+  }
+  table.data tbody td{
+    padding:12px 14px; border-bottom:1px solid var(--border-soft); color:var(--text-secondary);
+  }
+  table.data tbody tr:hover td{background:var(--bg-surface);}
+  table.data td.nd, table.data td.demande{font-family:'JetBrains Mono', monospace; color:var(--text-primary); font-size:12.5px;}
+  table.data td.client{color:var(--text-primary); font-weight:500;}
+  .badge{
+    display:inline-flex; align-items:center; gap:5px;
+    padding:3px 9px; border-radius:999px; font-size:11px; font-weight:600;
+  }
+  .badge.ok{background:rgba(45,212,191,0.12); color:var(--fiber);}
+  .badge.pending{background:rgba(242,184,75,0.12); color:var(--warn);}
+  .task-pill{
+    font-family:'JetBrains Mono', monospace; font-size:11px; padding:3px 8px;
+    border-radius:5px; background:var(--bg-surface-3); color:var(--text-secondary); border:1px solid var(--border);
+  }
+
+  /* =========================================================
+     SCREEN 3 — VALIDATION
+  ========================================================= */
+  #screen-validation{display:flex; align-items:flex-start; justify-content:center; padding:70px 20px 60px;}
+  .validation-wrap{width:100%; max-width:620px;}
+  .val-filecard{
+    display:flex; align-items:center; gap:12px;
+    background:var(--bg-surface); border:1px solid var(--border-soft); border-radius:var(--radius);
+    padding:14px 16px; margin:20px 0 26px;
+  }
+  .val-filecard .fico{
+    width:34px; height:34px; border-radius:8px; background:var(--bg-surface-3);
+    display:flex; align-items:center; justify-content:center; color:var(--text-tertiary); flex-shrink:0;
+  }
+  .val-filecard .fname{font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--text-secondary); word-break:break-all;}
+  .val-panel{
+    background:var(--bg-surface); border:1px solid var(--border-soft); border-radius:var(--radius);
+    overflow:hidden; margin-bottom:20px;
+  }
+  .val-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:15px 18px; border-bottom:1px solid var(--border-soft);
+  }
+  .val-row:last-child{border-bottom:none;}
+  .val-row .field-name{
+    font-size:11.5px; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.06em;
+    width:130px; flex-shrink:0; font-weight:600;
+  }
+  .val-row .field-val{
+    flex:1; font-family:'JetBrains Mono', monospace; font-size:14.5px; font-weight:600; color:var(--text-primary);
+  }
+  .source-tag{
+    font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;
+    padding:3px 8px; border-radius:5px; flex-shrink:0; margin-left:10px;
+  }
+  .source-tag.filename{background:var(--signal-glow); color:var(--signal);}
+  .source-tag.ocr{background:var(--fiber-glow); color:var(--fiber);}
+  .val-actions{display:flex; align-items:center; gap:12px; margin-top:6px;}
+  .btn-validate{
+    flex:1; padding:13px; border:none; border-radius:var(--radius-sm);
+    background:var(--fiber); color:#062421; font-weight:700; font-size:14px; cursor:pointer;
+    font-family:'Inter', sans-serif; transition:filter .15s;
+  }
+  .btn-validate:hover{filter:brightness(1.08);}
+  .btn-cancel{
+    padding:13px 20px; border-radius:var(--radius-sm); border:1px solid var(--border);
+    background:transparent; color:var(--text-secondary); font-size:14px; cursor:pointer;
+    font-family:'Inter', sans-serif;
+  }
+  .ocr-note{
+    display:flex; gap:10px; align-items:flex-start;
+    background:var(--fiber-glow); border:1px solid var(--fiber-dim); border-radius:var(--radius-sm);
+    padding:12px 14px; margin-bottom:20px; font-size:12.5px; color:var(--text-secondary); line-height:1.5;
+  }
+  .ocr-note .crop-preview{
+    font-family:'JetBrains Mono', monospace; font-size:11px; background:#062421; color:var(--fiber);
+    padding:6px 9px; border-radius:5px; display:inline-block; margin-top:6px; letter-spacing:0.02em;
+  }
+
+  /* =========================================================
+     SCREEN 4 — DASHBOARD ADMIN
+  ========================================================= */
+  .admin-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:30px;}
+  .kpi{
+    background:var(--bg-surface); border:1px solid var(--border-soft); border-radius:var(--radius);
+    padding:18px 20px;
+  }
+  .kpi .val{font-family:'Space Grotesk', sans-serif; font-size:28px; font-weight:700;}
+  .kpi .lbl{font-size:11.5px; color:var(--text-tertiary); margin-top:4px;}
+
+  .panel{
+    background:var(--bg-surface); border:1px solid var(--border-soft); border-radius:var(--radius);
+    padding:22px 24px; margin-bottom:22px;
+  }
+  .panel h3{font-family:'Space Grotesk', sans-serif; font-size:15px; font-weight:600; margin-bottom:20px;}
+
+  .bars{display:flex; align-items:flex-end; gap:26px; height:150px; padding:0 6px;}
+  .bar-col{display:flex; flex-direction:column; align-items:center; gap:8px; flex:1;}
+  .bar-track{width:100%; max-width:52px; height:120px; display:flex; align-items:flex-end;}
+  .bar-fill{
+    width:100%; border-radius:5px 5px 0 0;
+    background:linear-gradient(180deg, var(--signal), var(--signal-dim));
+    animation:growBar .7s ease;
+  }
+  @keyframes growBar{ from{height:0 !important;} }
+  .bar-col .bnum{font-family:'JetBrains Mono', monospace; font-size:12px; font-weight:600; color:var(--text-primary);}
+  .bar-col .bname{font-size:11px; color:var(--text-tertiary); text-align:center;}
+
+  .recap-table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  .recap-table th, .recap-table td{padding:9px 12px; text-align:center; border-bottom:1px solid var(--border-soft);}
+  .recap-table th{
+    color:var(--text-tertiary); font-weight:600; text-transform:uppercase; font-size:10px; letter-spacing:0.05em;
+  }
+  .recap-table th:first-child, .recap-table td:first-child{text-align:left; color:var(--text-secondary);}
+  .recap-table td:first-child{font-weight:500; color:var(--text-primary);}
+  .recap-table td{font-family:'JetBrains Mono', monospace; color:var(--text-secondary);}
+  .recap-table tr.total td{font-weight:700; color:var(--text-primary); border-top:1px solid var(--border);}
+
+  .panel-actions{display:flex; gap:12px;}
+  .btn-export{
+    padding:10px 18px; border-radius:var(--radius-sm); border:1px solid var(--signal-dim);
+    background:var(--signal-glow); color:var(--signal); font-size:13px; font-weight:600; cursor:pointer;
+    font-family:'Inter', sans-serif;
+  }
+
+  @media (max-width:720px){
+    .admin-grid{grid-template-columns:repeat(2,1fr);}
+    .stats-row{grid-template-columns:1fr;}
+    table.data{display:block; overflow-x:auto;}
+    .bars{gap:12px;}
+    .demo-nav{flex-wrap:wrap;}
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-fiber">
+  <svg viewBox="0 0 1200 800" preserveAspectRatio="none">
+    <path class="fiber-strand" d="M-50,120 C 250,60 450,220 750,140 S 1150,60 1300,160" style="animation-delay:0s"/>
+    <path class="fiber-strand orange" d="M-50,420 C 300,480 500,340 800,420 S 1150,500 1300,400" style="animation-delay:1.2s"/>
+    <path class="fiber-strand" d="M-50,650 C 280,600 520,720 820,640 S 1150,560 1300,660" style="animation-delay:2.4s"/>
+  </svg>
+</div>
+
+<nav class="demo-nav">
+  <span class="label">Maquettes ·</span>
+  <button class="demo-tab active" data-screen="screen-login">01 · Connexion</button>
+  <button class="demo-tab" data-screen="screen-chef">02 · Espace Chef d'Équipe</button>
+  <button class="demo-tab" data-screen="screen-validation">03 · Validation</button>
+  <button class="demo-tab" data-screen="screen-admin">04 · Dashboard Admin</button>
+</nav>
+
+<!-- ================= SCREEN 1 — LOGIN ================= -->
+<section id="screen-login" class="screen active">
+  <div class="login-card">
+    <div class="login-wordmark">
+      <span class="dot"></span>
+      <span class="txt">SUIVI <span>FTTH</span></span>
+    </div>
+    <div class="login-sub">Interventions réseau · Fibre optique</div>
+
+    <div class="field">
+      <label>Identifiant</label>
+      <input type="text" placeholder="ex. adiouf" value="adiouf">
+    </div>
+    <div class="field">
+      <label>Mot de passe</label>
+      <input type="password" placeholder="••••••••" value="••••••••">
+    </div>
+    <button class="btn-primary">Se connecter</button>
+
+    <div class="login-foot">Accès réservé aux chefs d'équipe et administrateurs</div>
+  </div>
+</section>
+
+<!-- ================= SCREEN 2 — CHEF D'ÉQUIPE ================= -->
+<section id="screen-chef" class="screen">
+  <div class="bcbar signal">
+    <span class="pulse-dot"></span>
+    <span class="seg strong">Espace Chef d'Équipe</span>
+    <span class="sep">/</span>
+    <span class="seg">Ablaye Diouf</span>
+    <span class="sep">/</span>
+    <span class="seg">Juillet 2026</span>
+  </div>
+
+  <div class="app-shell">
+    <div class="topbar">
+      <div class="who">
+        <div class="avatar">AD</div>
+        <div>
+          <div class="name">Ablaye Diouf</div>
+          <div class="role">chef d'équipe</div>
+        </div>
+      </div>
+      <button class="btn-ghost">Déconnexion</button>
+    </div>
+
+    <div class="dropzone">
+      <div class="ico">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0-12 4 4m-4-4-4 4M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/></svg>
+      </div>
+      <div class="main-txt">Glissez-déposez un PDF Senpil Pro</div>
+      <div class="sub-txt">ou cliquez pour sélectionner un fichier</div>
+      <span class="fmt">339683059-Survey-(INL)-Serigne Mbaye Seck.pdf</span>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="val orange">56</div>
+        <div class="lbl">Interventions ce mois</div>
+      </div>
+      <div class="stat-card">
+        <div class="val teal">53</div>
+        <div class="lbl">Validées</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" style="color:var(--warn)">3</div>
+        <div class="lbl">En attente de validation</div>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <h2>Mes interventions</h2>
+      <span class="count">56 lignes · juillet 2026</span>
+    </div>
+    <table class="data">
+      <thead>
+        <tr><th>Date</th><th>ND</th><th>Client</th><th>Tâche</th><th>N° Demande</th><th>Statut</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>19/08</td><td class="nd">339683059</td><td class="client">Serigne Mbaye Seck</td>
+          <td><span class="task-pill">Survey</span></td><td class="demande">27349416</td>
+          <td><span class="badge pending">● en attente</span></td>
+        </tr>
+        <tr>
+          <td>07/07</td><td class="nd">339769139</td><td class="client">Faless Niang</td>
+          <td><span class="task-pill">Passage</span></td><td class="demande">24897356</td>
+          <td><span class="badge ok">✓ validée</span></td>
+        </tr>
+        <tr>
+          <td>07/07</td><td class="nd">339745978</td><td class="client">Mame Malick Samb</td>
+          <td><span class="task-pill">Survey</span></td><td class="demande">25404376</td>
+          <td><span class="badge ok">✓ validée</span></td>
+        </tr>
+        <tr>
+          <td>07/07</td><td class="nd">339781435</td><td class="client">Mor Dieng</td>
+          <td><span class="task-pill">Passage</span></td><td class="demande">25378236</td>
+          <td><span class="badge ok">✓ validée</span></td>
+        </tr>
+        <tr>
+          <td>06/07</td><td class="nd">339755819</td><td class="client">Mama Sokhna Sall</td>
+          <td><span class="task-pill">RIT</span></td><td class="demande">25780256</td>
+          <td><span class="badge ok">✓ validée</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================= SCREEN 3 — VALIDATION ================= -->
+<section id="screen-validation" class="screen">
+  <div class="validation-wrap">
+    <div class="bcbar fiber">
+      <span class="pulse-dot"></span>
+      <span class="seg strong">Validation</span>
+      <span class="sep">/</span>
+      <span class="seg">Ablaye Diouf</span>
+    </div>
+
+    <div style="padding:0 4px;">
+      <div class="val-filecard">
+        <div class="fico">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l5 5v15H6z"/><path d="M15 2v5h5"/></svg>
+        </div>
+        <div class="fname">339683059-Survey-(INL)-Serigne Mbaye Seck.pdf</div>
+      </div>
+
+      <div class="val-panel">
+        <div class="val-row">
+          <div class="field-name">ND</div>
+          <div class="field-val">339683059</div>
+          <div class="source-tag filename">nom fichier</div>
+        </div>
+        <div class="val-row">
+          <div class="field-name">Tâche</div>
+          <div class="field-val">Survey</div>
+          <div class="source-tag filename">nom fichier</div>
+        </div>
+        <div class="val-row">
+          <div class="field-name">Client</div>
+          <div class="field-val">Serigne Mbaye Seck</div>
+          <div class="source-tag filename">nom fichier</div>
+        </div>
+        <div class="val-row">
+          <div class="field-name">N° Demande</div>
+          <div class="field-val">27349416</div>
+          <div class="source-tag ocr">ocr</div>
+        </div>
+      </div>
+
+      <div class="ocr-note">
+        <span>🔎</span>
+        <div>
+          Numéro de demande extrait automatiquement du bandeau en haut de la page 1.
+          <div class="crop-preview">SURVEY_INSTALLATION / SURVEY / 27349416</div>
+        </div>
+      </div>
+
+      <div class="val-actions">
+        <button class="btn-validate">Valider et enregistrer</button>
+        <button class="btn-cancel">Corriger</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SCREEN 4 — ADMIN ================= -->
+<section id="screen-admin" class="screen">
+  <div class="bcbar signal">
+    <span class="pulse-dot"></span>
+    <span class="seg strong">Dashboard Administration</span>
+    <span class="sep">/</span>
+    <span class="seg">Juillet 2026</span>
+  </div>
+
+  <div class="app-shell">
+    <div class="topbar">
+      <div class="who">
+        <div class="avatar" style="color:var(--fiber)">AD</div>
+        <div>
+          <div class="name">Administration</div>
+          <div class="role">vue globale</div>
+        </div>
+      </div>
+      <button class="btn-ghost">Déconnexion</button>
+    </div>
+
+    <div class="admin-grid">
+      <div class="kpi"><div class="val" style="color:var(--signal)">359</div><div class="lbl">Clients visités</div></div>
+      <div class="kpi"><div class="val">86</div><div class="lbl">Passage</div></div>
+      <div class="kpi"><div class="val" style="color:var(--fiber)">177</div><div class="lbl">Survey + Installation</div></div>
+      <div class="kpi"><div class="val" style="color:var(--warn)">14</div><div class="lbl">En attente de validation</div></div>
+    </div>
+
+    <div class="panel">
+      <h3>Performance par équipe</h3>
+      <div class="bars">
+        <div class="bar-col">
+          <span class="bnum">56</span>
+          <div class="bar-track"><div class="bar-fill" style="height:44%"></div></div>
+          <span class="bname">Ablaye Diouf</span>
+        </div>
+        <div class="bar-col">
+          <span class="bnum">92</span>
+          <div class="bar-track"><div class="bar-fill" style="height:72%"></div></div>
+          <span class="bname">Yakhya</span>
+        </div>
+        <div class="bar-col">
+          <span class="bnum">84</span>
+          <div class="bar-track"><div class="bar-fill" style="height:66%"></div></div>
+          <span class="bname">Cheikh Ndiaye</span>
+        </div>
+        <div class="bar-col">
+          <span class="bnum">127</span>
+          <div class="bar-track"><div class="bar-fill" style="height:100%"></div></div>
+          <span class="bname">Alysow Djiba</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Rapport mensuel — Juillet 2026</h3>
+      <table class="recap-table">
+        <thead>
+          <tr><th>Tâche</th><th>Ablaye</th><th>Yakhya</th><th>Cheikh</th><th>Alysow</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Survey</td><td>14</td><td>0</td><td>19</td><td>24</td></tr>
+          <tr><td>Passage</td><td>15</td><td>25</td><td>6</td><td>40</td></tr>
+          <tr><td>RIT</td><td>3</td><td>2</td><td>14</td><td>3</td></tr>
+          <tr><td>RIT + Survey</td><td>2</td><td>0</td><td>6</td><td>7</td></tr>
+          <tr><td>Reléve</td><td>5</td><td>0</td><td>0</td><td>0</td></tr>
+          <tr><td>Diag réor</td><td>0</td><td>2</td><td>1</td><td>0</td></tr>
+          <tr class="total"><td>Total</td><td>56</td><td>92</td><td>84</td><td>127</td></tr>
+        </tbody>
+      </table>
+      <div class="panel-actions" style="margin-top:20px;">
+        <button class="btn-export">↓ Exporter Excel</button>
+        <button class="btn-ghost">Gérer les équipes</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll('.demo-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.demo-tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.screen).classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

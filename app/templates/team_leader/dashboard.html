@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Chef d'Équipe{% endblock %}
+
+{% block content %}
+<div class="bcbar signal">
+  <span class="pulse-dot"></span>
+  <span class="seg strong">Espace Chef d'Équipe</span>
+  <span class="sep">/</span>
+  <span class="seg">{{ current_user.full_name }}</span>
+</div>
+
+<div class="app-shell">
+  <div class="topbar">
+    <div class="who">
+      <div class="avatar">{{ current_user.full_name[:2] | upper }}</div>
+      <div>
+        <div class="name">{{ current_user.full_name }}</div>
+        <div class="role">Chef d'équipe {{ current_user.team.team_name if current_user.team else '' }}</div>
+      </div>
+    </div>
+    <a href="{{ url_for('auth.logout') }}" class="btn-ghost">Déconnexion</a>
+  </div>
+
+  <form action="{{ url_for('main.upload') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
+      <div class="dropzone" id="dropZone" onclick="document.getElementById('pdfFile').click()">
+        <div class="ico">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0-12 4 4m-4-4-4 4M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/></svg>
+        </div>
+        <div class="main-txt">Glissez-déposez un PDF Senpil Pro</div>
+        <div class="sub-txt">ou cliquez pour sélectionner un fichier</div>
+        <input type="file" name="pdf_file" id="pdfFile" style="display:none;" accept=".pdf" required onchange="document.getElementById('uploadForm').submit()">
+      </div>
+  </form>
+
+  {% set valides = interventions|selectattr("validation_status", "equalto", "validated")|list|length %}
+  {% set attente = interventions|selectattr("validation_status", "equalto", "pending")|list|length %}
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="val orange">{{ interventions|length }}</div>
+      <div class="lbl">Interventions ce mois</div>
+    </div>
+    <div class="stat-card">
+      <div class="val teal">{{ valides }}</div>
+      <div class="lbl">Validées</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" style="color:var(--warn)">{{ attente }}</div>
+      <div class="lbl">En attente / Corrigées</div>
+    </div>
+  </div>
+
+  <div class="section-head">
+    <h2>Mes interventions</h2>
+    <span class="count">{{ interventions|length }} lignes</span>
+  </div>
+  <table class="data">
+    <thead>
+      <tr><th>Date</th><th>ND</th><th>Client</th><th>Tâche</th><th>N° Demande</th><th>Statut</th></tr>
+    </thead>
+    <tbody>
+        {% for intervention in interventions %}
+        <tr>
+            <td>{{ intervention.intervention_date.strftime('%d/%m') }}</td>
+            <td class="nd">{{ intervention.nd }}</td>
+            <td class="client">{{ intervention.client_name }}</td>
+            <td><span class="task-pill">{{ intervention.task_type }}</span></td>
+            <td class="demande">{{ intervention.demande_no or '-' }}</td>
+            <td>
+                {% if intervention.validation_status == 'validated' %}
+                    <span class="badge ok">✓ validée</span>
+                {% elif intervention.validation_status == 'pending' %}
+                    <span class="badge pending">● en attente</span>
+                {% else %}
+                    <span class="badge edited">✎ corrigée</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="6" style="text-align:center; padding:30px;">Aucune intervention enregistrée ce mois-ci.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const dropZone = document.getElementById('dropZone');
+    
+    // Drag & Drop
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    dropZone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if(files.length) {
+            document.getElementById('pdfFile').files = files;
+            document.getElementById('uploadForm').submit();
+        }
+    });
+</script>
+{% endblock %}

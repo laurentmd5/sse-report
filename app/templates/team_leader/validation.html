@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Validation des données{% endblock %}
+
+{% block content %}
+<section id="screen-validation">
+  <div class="validation-wrap">
+    <div class="bcbar fiber">
+      <span class="pulse-dot"></span>
+      <span class="seg strong">Validation</span>
+      <span class="sep">/</span>
+      <span class="seg">{{ current_user.full_name }}</span>
+    </div>
+
+    <div style="padding:0 4px;">
+      <div class="val-filecard">
+        <div class="fico">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l5 5v15H6z"/><path d="M15 2v5h5"/></svg>
+        </div>
+        <div class="fname">{{ filename }}</div>
+      </div>
+
+      <form action="{{ url_for('main.save_intervention') }}" method="POST">
+          <!-- Données cachées pour le backend -->
+          <input type="hidden" name="filename" value="{{ filename }}">
+          <input type="hidden" name="filepath" value="{{ filepath }}">
+          <input type="hidden" name="confidence_score" value="{{ validation_data.confidence_score }}">
+          <input type="hidden" name="extraction_method" value="{{ validation_data.extraction_method }}">
+
+          <div class="val-panel">
+            <div class="val-row">
+              <div class="field-name">ND</div>
+              <div class="field-val"><input type="text" name="nd" value="{{ validation_data.nd or '' }}" required></div>
+              <div class="source-tag filename">nom fichier</div>
+            </div>
+            <div class="val-row">
+              <div class="field-name">Tâche</div>
+              <div class="field-val"><input type="text" name="task_type" value="{{ validation_data.task_type or '' }}" required></div>
+              <div class="source-tag filename">nom fichier</div>
+            </div>
+            <div class="val-row">
+              <div class="field-name">Client</div>
+              <div class="field-val client"><input type="text" name="client_name" value="{{ validation_data.client_name or '' }}" required></div>
+              <div class="source-tag filename">nom fichier</div>
+            </div>
+            <div class="val-row">
+              <div class="field-name">N° Demande</div>
+              <div class="field-val">
+                  <input type="text" name="demande_no" value="{{ validation_data.demande_no or '' }}" {% if validation_data.confidence_score < 80 %}autofocus{% endif %}>
+              </div>
+              <div class="source-tag ocr">ocr</div>
+            </div>
+          </div>
+
+          {% if not validation_data.demande_no %}
+          <div class="ocr-note warn">
+            <span>⚠️</span>
+            <div>
+              Impossible d'extraire le numéro de demande (N° Commande) via l'OCR.
+              Veuillez ouvrir le PDF et saisir le numéro manuellement.
+            </div>
+          </div>
+          {% else %}
+          <div class="ocr-note">
+            <span>🔎</span>
+            <div>
+              Numéro de demande extrait automatiquement via l'OCR.
+              <div class="crop-preview">{{ validation_data.demande_no }} (Confiance: {{ validation_data.confidence_score }}%)</div>
+            </div>
+          </div>
+          {% endif %}
+
+          <div class="val-actions">
+            <button type="submit" class="btn-validate">Valider et enregistrer</button>
+            <a href="{{ url_for('main.dashboard') }}" class="btn-cancel" style="text-decoration:none; text-align:center; display:inline-block;">Annuler</a>
+          </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

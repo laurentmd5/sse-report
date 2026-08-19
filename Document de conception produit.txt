@@ -1,0 +1,759 @@
+Document de Conception Produit - Application de Suivi des Interventions FTTH
+1. Introduction
+1.1 Contexte du Projet
+L'entreprise dispose d'équipes techniques intervenant sur le réseau FTTH (Fiber To The Home). Actuellement, les chefs d'équipe effectuent des interventions et génèrent des rapports via la plateforme Senpil Pro. Ces rapports sont imprimés au format PDF et doivent être intégrés manuellement dans des feuilles de calcul Excel pour le suivi et le reporting.
+
+1.2 Problématique Actuelle
+Problème	Impact
+Saisie manuelle des données	Perte de temps et erreurs humaines
+PDF non exploitables (images)	Impossible d'extraire automatiquement les données
+Absence de centralisation	Difficulté de suivi et de reporting
+Processus manuel	Risque d'oubli ou de données incomplètes
+1.3 Objectif du Projet
+Développer une application web permettant :
+
+L'upload automatique des PDF Senpil Pro
+
+L'extraction intelligente des données (nom du fichier + OCR ciblé)
+
+La centralisation des données dans une base MySQL
+
+La génération automatique des rapports hebdomadaires et mensuels
+
+L'export des données au format Excel
+
+2. Analyse des Besoins
+2.1 Acteurs du Système
+graph TD
+    A[Administrateur] -->|Gère| B[Application]
+    C[Chef d'Équipe] -->|Utilise| B
+    B -->|Stocke| D[(Base de Données)]
+    B -->|Génère| E[Rapports Excel]
+2.2 Rôles et Responsabilités
+Rôle	Responsabilités
+Administrateur	- Gestion des utilisateurs et équipes
+- Consultation de tous les rapports
+- Génération des rapports hebdo/mensuels
+- Export Excel
+- Dashboard de suivi
+Chef d'Équipe	- Upload des PDF Senpil Pro
+- Validation des données extraites
+- Consultation de ses rapports
+- Historique des interventions
+2.3 Cas d'Usage Principaux
+UC1 - Upload et Traitement d'un PDF
+sequenceDiagram
+    participant T as Chef d'Équipe
+    participant A as Application
+    participant P as Parser
+    participant D as Base de Données
+    
+    T->>A: Upload PDF
+    A->>P: Analyser nom du fichier
+    P-->>A: ND, Tâche, Client
+    A->>P: OCR ciblé (numéro demande)
+    P-->>A: N° Demande
+    A->>T: Afficher données extraites
+    T->>A: Valider/corriger
+    A->>D: Enregistrer
+    A->>T: Confirmation
+UC2 - Génération de Rapport
+sequenceDiagram
+    participant A as Administrateur
+    participant App as Application
+    participant D as Base de Données
+    
+    A->>App: Sélectionner période
+    A->>App: Sélectionner équipe
+    App->>D: Récupérer données
+    D-->>App: Données filtrées
+    App->>App: Calculer statistiques
+    App->>A: Afficher tableau
+    A->>App: Exporter Excel
+    App->>A: Télécharger fichier
+3. Étude de Faisabilité
+3.1 Analyse des Données Sources
+3.1.1 Fichier PDF Senpil Pro
+Format : PDF scanné (image), pas de couche texte
+
+Structure :
+
+yaml
+Page 1: En-tête avec informations générales
+Page 2: Détails techniques
+Page 3: Formulaire client (Nom, Téléphone)
+Page 4: Récapitulatif (ND, Adresse)
+Page 5: Géolocalisation
+Nom du Fichier : Structure standardisée
+
+text
+{ND}-{Tâche}-({INL})-{Nom Client}.pdf
+Exemple : 339683059-Survey-(INL)-Serigne Mbaye Seck.pdf
+
+3.1.2 Données Extraites
+Donnée	Source	Méthode d'extraction	Fiabilité
+ND (Numéro de Demande)	Nom du fichier	Parsing	100%
+Tâche	Nom du fichier	Parsing + Liste autorisée	100%
+Nom du Client	Nom du fichier	Parsing	95%
+N° Demande (Commande)	Contenu PDF	OCR ciblé	>95%
+3.2 Justification de l'Approche
+Pourquoi ne pas faire de l'OCR sur tout le document ?
+
+Critère	OCR Complet	OCR Ciblé
+Complexité	Élevée	Faible
+Temps traitement	5-10s	1-2s
+Taux d'erreur	10-20%	<5%
+Maintenance	Complexe	Simple
+Coût	Élevé	Faible
+Conclusion : L'approche hybride (nom fichier + OCR ciblé) est la plus adaptée.
+
+4. Architecture de la Solution
+4.1 Architecture Globale
+graph TB
+    subgraph Frontend
+        UI[Interface Utilisateur]
+        DASH[Dashboard]
+        UPLOAD[Upload PDF]
+    end
+    
+    subgraph Backend
+        AUTH[Authentification]
+        PARSER[Parser Manager]
+        OCR[OCR Engine]
+        VALID[Validation Service]
+        RAPPORT[Rapport Generator]
+        EXPORT[Export Service]
+    end
+    
+    subgraph Data
+        DB[(MySQL)]
+        FILES[Fichiers Stockés]
+    end
+    
+    UI --> AUTH
+    UPLOAD --> PARSER
+    PARSER --> OCR
+    PARSER --> VALID
+    OCR --> VALID
+    VALID --> DB
+    DASH --> RAPPORT
+    RAPPORT --> DB
+    RAPPORT --> EXPORT
+    EXPORT --> UI
+    VALID --> FILES
+4.2 Stack Technologique
+Couche	Technologie	Version	Justification
+Frontend	HTML/CSS/JavaScript	-	Simplicité, compatible avec tout navigateur
+Framework CSS	Bootstrap 5	5.3.0	Interface responsive rapide
+Graphiques	Chart.js	4.4.0	Visualisation des statistiques
+Backend	Flask (Python)	2.3.0	Léger, facile à développer
+ORM	SQLAlchemy	2.0.0	Abstraction base de données
+Base de Données	MySQL	8.0+	Robuste, standard
+PDF→Image	PyMuPDF (fitz)	1.23.0	Rapide, fiable
+Prétraitement	OpenCV	4.8.0	Amélioration qualité image
+OCR	Tesseract	5.3.0	Open source, efficace
+Excel	openpyxl	3.1.0	Export format standard
+4.3 Structure des Données
+4.3.1 Schéma MySQL
+sql
+-- Table des utilisateurs
+CREATE TABLE users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role ENUM('admin', 'team_leader') NOT NULL,
+    full_name VARCHAR(100) NOT NULL,
+    team_id INT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_login TIMESTAMP NULL,
+    INDEX idx_team (team_id),
+    INDEX idx_role (role)
+);
+
+-- Table des équipes
+CREATE TABLE teams (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    team_name VARCHAR(50) UNIQUE NOT NULL,
+    team_leader_id INT,
+    description TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (team_leader_id) REFERENCES users(id)
+);
+
+-- Table des interventions
+CREATE TABLE interventions (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nd VARCHAR(20) NOT NULL COMMENT 'Numéro de Demande',
+    demande_no VARCHAR(20) COMMENT 'N° de commande (extrait OCR)',
+    client_name VARCHAR(255) NOT NULL COMMENT 'Nom du client',
+    task_type VARCHAR(50) NOT NULL COMMENT 'Type de tâche',
+    team_leader_id INT NOT NULL,
+    intervention_date DATE NOT NULL,
+    pdf_filename VARCHAR(255),
+    pdf_path VARCHAR(500),
+    extraction_method ENUM('filename_only', 'filename_ocr', 'manual') DEFAULT 'filename_ocr',
+    confidence_score INT DEFAULT 0 COMMENT 'Score de confiance 0-100',
+    validation_status ENUM('pending', 'validated', 'corrected') DEFAULT 'pending',
+    validated_by INT,
+    validated_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (team_leader_id) REFERENCES users(id),
+    FOREIGN KEY (validated_by) REFERENCES users(id),
+    INDEX idx_nd (nd),
+    INDEX idx_date (intervention_date),
+    INDEX idx_team (team_leader_id),
+    INDEX idx_task (task_type),
+    INDEX idx_validation (validation_status)
+);
+
+-- Table de logs OCR
+CREATE TABLE ocr_logs (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    intervention_id INT,
+    page_number INT,
+    raw_text TEXT,
+    extracted_value VARCHAR(50),
+    extraction_pattern VARCHAR(100),
+    processing_time_ms INT,
+    error_code VARCHAR(20),
+    error_message TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (intervention_id) REFERENCES interventions(id) ON DELETE CASCADE,
+    INDEX idx_intervention (intervention_id)
+);
+
+-- Table des rapports mensuels (cache)
+CREATE TABLE monthly_reports (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    report_month VARCHAR(7) NOT NULL COMMENT 'Format: YYYY-MM',
+    team_id INT,
+    team_name VARCHAR(50),
+    total_sav INT DEFAULT 0,
+    total_diag_reor INT DEFAULT 0,
+    total_installation INT DEFAULT 0,
+    total_passage INT DEFAULT 0,
+    total_survey INT DEFAULT 0,
+    total_upgrade INT DEFAULT 0,
+    total_survey_install INT DEFAULT 0,
+    total_modif_interieur INT DEFAULT 0,
+    total_clients INT DEFAULT 0,
+    generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_month_team (report_month, team_id),
+    FOREIGN KEY (team_id) REFERENCES teams(id)
+);
+
+-- Table d'audit
+CREATE TABLE audit_log (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT,
+    action VARCHAR(50) NOT NULL,
+    entity_type VARCHAR(50),
+    entity_id INT,
+    old_data JSON,
+    new_data JSON,
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    INDEX idx_user (user_id),
+    INDEX idx_action (action),
+    INDEX idx_created (created_at)
+);
+4.3.2 Mapping des Données
+yaml
+# Correspondance entre données sources et base
+source_mapping:
+  filename_nd:
+    field: nd
+    source: nom_fichier
+    validation: regex ^\d{9}$
+
+  filename_task:
+    field: task_type
+    source: nom_fichier
+    validation: enum [Survey, Passage, RIT, RIT + Survey, reléve, Installation]
+
+  filename_client:
+    field: client_name
+    source: nom_fichier
+    validation: length >= 3
+
+  ocr_demande:
+    field: demande_no
+    source: pdf_content
+    validation: regex ^\d{8,}$
+4.4 Modules Fonctionnels
+4.4.1 Module Parser
+Responsabilités :
+
+Extraction des données du nom du fichier
+
+Validation des données extraites
+
+Gestion des variantes de format
+
+Règles de Parsing :
+
+yaml
+filename_patterns:
+  - pattern: "^(\\d{9,})-(Survey|Passage|RIT|reléve)(.*?)-(.+)\\.pdf$"
+    capture:
+      1: nd
+      2: task_type
+      4: client_name
+  
+  - pattern: "^(\\d{9,})-(Survey|Passage|RIT|reléve)-INL-(.+)\\.pdf$"
+    capture:
+      1: nd
+      2: task_type
+      4: client_name
+  
+  - pattern: "^(\\d{9,})-(SURVEY_INSTALLATION|RIT|PASSAGE)-(.+)\\.pdf$"
+    capture:
+      1: nd
+      2: task_type
+      4: client_name
+4.4.2 Module OCR
+Responsabilités :
+
+Conversion PDF → Image
+
+Prétraitement de l'image
+
+Extraction du numéro de demande
+
+Pipeline OCR :
+
+yaml
+steps:
+  - conversion:
+      method: PyMuPDF
+      dpi: 300
+      format: JPEG
+
+  - preprocessing:
+      - grayscale: true
+      - threshold: Otsu
+      - denoise: median_blur
+      - contrast: equalize_hist
+
+  - extraction:
+      method: Tesseract
+      language: fra+eng
+      psm: 6  # Single text block
+      pattern: "/(\\d{8,})"
+      target_pages: [1, 2, 3]
+
+  - validation:
+      - length: 8-10 digits
+      - starts_with: allow any
+4.4.3 Module de Validation
+Responsabilités :
+
+Affichage des données extraites
+
+Correction manuelle possible
+
+Enregistrement en base
+
+Niveaux de Validation :
+
+Niveau	Condition	Action
+Auto	ND + Tâche + Client + Demande	Enregistrement auto
+Semi-auto	ND + Tâche + Client + Demande (confiance <80%)	Validation requise
+Manuel	Données manquantes	Saisie complète
+4.4.4 Module de Reporting
+Responsabilités :
+
+Génération des rapports hebdomadaires
+
+Génération des rapports mensuels
+
+Export Excel
+
+Formats de Rapport :
+
+Rapport Hebdomadaire :
+
+text
+Semaine du DD/MM au DD/MM
+┌──────────────┬─────────┬─────────┬─────────┬─────────┐
+│              │ Ablaye  │ Yakhya  │ Cheikh  │ Alysow  │
+├──────────────┼─────────┼─────────┼─────────┼─────────┤
+│ SAV          │   5     │   2     │   14    │   3     │
+│ Installation │   2     │   0     │   6     │   7     │
+│ Passage      │   15    │   25    │   6     │   40    │
+│ Survey       │   14    │   0     │   19    │   24    │
+│ S+I          │   20    │   65    │   39    │   53    │
+│ Total        │   56    │   92    │   84    │   127   │
+└──────────────┴─────────┴─────────┴─────────┴─────────┘
+5. Interface Utilisateur
+5.1 Maquettes
+5.1.1 Page de Connexion
+text
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│                    🔐 SUIVI FTTH                            │
+│                                                             │
+│                    ══════════════════                       │
+│                                                             │
+│                    👤 Identifiant                           │
+│                    ┌─────────────────────┐                  │
+│                    │                     │                  │
+│                    └─────────────────────┘                  │
+│                                                             │
+│                    🔒 Mot de passe                          │
+│                    ┌─────────────────────┐                  │
+│                    │ ●●●●●●●●●           │                  │
+│                    └─────────────────────┘                  │
+│                                                             │
+│                    [🔑 Se connecter]                        │
+│                                                             │
+│                    ══════════════════                       │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+5.1.2 Dashboard Chef d'Équipe
+text
+┌─────────────────────────────────────────────────────────────┐
+│  👨‍🔧 Espace Chef d'Équipe - Ablaye DIOUF    [🔓 Déconnexion]│
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  📤 Uploader un PDF Senpil Pro                             │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │                                                     │   │
+│  │     📄 Glissez-déposez votre fichier PDF ici        │   │
+│  │            ou cliquez pour sélectionner              │   │
+│  │                                                     │   │
+│  └──────────────────────────────────────────────────────┘   │
+│                                                             │
+│  ───────────────────────────────────────────────────────     │
+│                                                             │
+│  📋 Interventions du Mois (Juillet 2026)                   │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │ Date  │ ND       │ Client         │ Tâche    │ Statut│   │
+│  │───────│──────────│────────────────│──────────│───────│   │
+│  │ 07/07 │ 339769139│ Faless niang   │ Passage  │ ✅    │   │
+│  │ 07/07 │ 339745978│ Mame malick    │ Survey   │ ✅    │   │
+│  │ 07/07 │ 339781435│ Mor dieng      │ Passage  │ ⚠️    │   │
+│  │ 22/07 │ 339755404│ Khadim seck    │ RIT+Surv.│ ✅    │   │
+│  │ ...   │ ...      │ ...            │ ...      │ ...   │   │
+│  └──────────────────────────────────────────────────────┘   │
+│                                                             │
+│  📊 Statistiques : Total: 56 | En attente: 3              │
+│                                                             │
+│  [📥 Exporter mes données]  [📈 Voir rapport complet]      │
+└─────────────────────────────────────────────────────────────┘
+5.1.3 Interface de Validation
+text
+┌─────────────────────────────────────────────────────────────┐
+│  ✅ Validation des Données - Ablaye DIOUF                  │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  🔍 Données extraites du fichier :                         │
+│                                                             │
+│  ┌──────────────────────────────────────────────────┐      │
+│  │  📄 Fichier : 339683059-Survey-Serigne Mbaye.pdf │      │
+│  └──────────────────────────────────────────────────┘      │
+│                                                             │
+│  ╔══════════════════════════════════════════════════════╗   │
+│  ║  Champ           │ Valeur Extraite    │ Action     ║   │
+│  ╠═══════════════════╪════════════════════╪════════════╣   │
+│  ║  ND              │ 339683059          │ ✅ Valide  ║   │
+│  ║  N° Demande      │ 27349416           │ [✏️]       ║   │
+│  ║  Tâche           │ Survey             │ [✏️]       ║   │
+│  ║  Client          │ Serigne Mbaye Seck │ [✏️]       ║   │
+│  ╚═══════════════════╧════════════════════╧════════════╝   │
+│                                                             │
+│  ℹ️ Le numéro de demande a été extrait par OCR             │
+│  Score de confiance : 95%                                  │
+│                                                             │
+│  [✅ Valider et enregistrer]  [❌ Annuler]                  │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+5.1.4 Dashboard Administrateur
+text
+┌─────────────────────────────────────────────────────────────┐
+│  📊 Dashboard Administration    [🔓 Déconnexion]            │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  📈 Statistiques Globales (Juillet 2026)                   │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐      │
+│  │   359        │ │   86         │ │   177        │      │
+│  │ Total Clients│ │ Passage      │ │ Survey + Inst│      │
+│  │ Visités      │ │              │ │              │      │
+│  └──────────────┘ └──────────────┘ └──────────────┘      │
+│                                                             │
+│  📊 Performance par Équipe                                  │
+│  ┌────────────────────────────────────────────────────┐    │
+│  │  ██████████████████████████████████████████████   │    │
+│  │  Ablaye: ████████████████████ 56                   │    │
+│  │  Yakhya: ████████████████████████████████ 92      │    │
+│  │  Cheikh: █████████████████████████████ 84         │    │
+│  │  Alysow: ████████████████████████████████████ 127 │    │
+│  └────────────────────────────────────────────────────┘    │
+│                                                             │
+│  ───────────────────────────────────────────────────────     │
+│                                                             │
+│  📊 Rapport Mensuel - Juillet 2026                         │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │              │ Ablaye │ Yakhya │ Cheikh │ Alysow │   │   │
+│  │──────────────│────────│────────│────────│────────│   │   │
+│  │ SAV          │   5    │   2    │   14   │   3    │   │   │
+│  │ Installation │   2    │   0    │   6    │   7    │   │   │
+│  │ Passage      │   15   │   25   │   6    │   40   │   │   │
+│  │ Survey       │   14   │   0    │   19   │   24   │   │   │
+│  │ S+I          │   20   │   65   │   39   │   53   │   │   │
+│  │ Total        │   56   │   92   │   84   │   127  │   │   │
+│  └──────────────────────────────────────────────────────┘   │
+│                                                             │
+│  [📥 Exporter Excel]  [🔄 Générer Rapport]                 │
+│  [👤 Gérer Utilisateurs]  [🏢 Gérer Équipes]               │
+└─────────────────────────────────────────────────────────────┘
+6. Processus Métier
+6.1 Workflow Complet
+stateDiagram-v2
+    [*] --> Upload: Technicien upload PDF
+    Upload --> ParseFilename: Extraction nom
+    ParseFilename --> ParseFilename: ND, Tâche, Client
+    ParseFilename --> OCR: OCR ciblé
+    OCR --> OCR: N° Demande
+    OCR --> Validation: Données extraites
+    
+    Validation --> AutoValid: Confiance > 80%
+    Validation --> ManualValid: Confiance < 80%
+    
+    AutoValid --> Save: Enregistrement auto
+    ManualValid --> Correct: Correction manuelle
+    Correct --> Save: Enregistrement
+    Save --> [*]
+    
+    Upload --> Error: Erreur
+    Error --> ManualInput: Saisie manuelle
+    ManualInput --> Save
+6.2 Règles Métier
+Règle 1 : Format du Fichier
+
+Le fichier doit être au format PDF
+
+Le nom doit suivre le pattern standard
+
+Taille max : 10MB
+
+Règle 2 : Validation des Données
+
+ND : 9 chiffres minimum
+
+N° Demande : 8-10 chiffres
+
+Nom Client : 3 caractères minimum
+
+Tâche : Valeur dans la liste autorisée
+
+Règle 3 : Intégrité des Données
+
+Un ND ne peut être enregistré qu'une seule fois par jour
+
+Le chef d'équipe ne voit que ses interventions
+
+L'administrateur voit toutes les interventions
+
+Règle 4 : Confidentialité
+
+Authentification requise pour toutes les actions
+
+Les mots de passe sont hachés (bcrypt)
+
+Les sessions expirent après 30 minutes d'inactivité
+
+7. Points d'Attention Techniques
+7.1 Qualité des PDF
+Problème	Solution
+PDF de mauvaise qualité	Prétraitement OpenCV (contraste, bruit)
+Rotation incorrecte	Détection et correction automatique
+Pages manquantes	Avertissement à l'utilisateur
+Fichier trop volumineux	Compression ou limitation taille upload
+7.2 Fiabilité OCR
+Problème	Solution
+Lettres confondues (O/0, I/1)	Dictionnaire de correction
+Caractères mal reconnus	Score de confiance + validation humaine
+Plusieurs chiffres possibles	Règle de sélection (longueur, position)
+Changement de format Senpil	Surveillance + mise à jour du parser
+7.3 Performance
+Aspect	Stratégie
+Temps de traitement	Optimisation du pipeline OCR
+Nombre de requêtes	Pagination des listes
+Base de données	Indexation des colonnes clés
+Rapports mensuels	Cache en base de données
+7.4 Sécurité
+Menace	Protection
+Accès non autorisé	Authentification + Sessions
+Injection SQL	SQLAlchemy (requêtes paramétrées)
+XSS	Sanitization des entrées
+Fichiers malveillants	Validation type/taille + Antivirus
+Données sensibles	Chiffrement en base
+8. Plan de Développement
+8.1 Phases
+gantt
+    title Plan de Développement
+    dateFormat  YYYY-MM-DD
+    
+    section Sprint 1
+    Setup Flask + MySQL           :a1, 2026-08-20, 2d
+    Authentification              :a2, after a1, 2d
+    Structure Base de Données     :a3, after a2, 2d
+    
+    section Sprint 2
+    Parser Nom Fichier            :b1, 2026-08-26, 2d
+    OCR Ciblé (Tesseract)         :b2, after b1, 3d
+    Validation des Données        :b3, after b2, 2d
+    
+    section Sprint 3
+    Interface Upload              :c1, 2026-09-02, 2d
+    Interface Validation          :c2, after c1, 2d
+    Dashboard Chef d'Équipe       :c3, after c2, 2d
+    
+    section Sprint 4
+    Dashboard Admin               :d1, 2026-09-09, 2d
+    Rapports Hebdo/Mensuel        :d2, after d1, 2d
+    Export Excel                  :d3, after d2, 2d
+    
+    section Sprint 5
+    Tests + Corrections           :e1, 2026-09-16, 3d
+    Déploiement                   :e2, after e1, 2d
+    Documentation                 :e3, after e2, 2d
+8.2 Jalons
+Jalon	Date	Livrable
+M1	J+10	Parser opérationnel + OCR fonctionnel
+M2	J+20	Interface upload + validation
+M3	J+30	Dashboard + rapports
+M4	J+40	Déploiement en production
+9. Tests et Validation
+9.1 Plan de Tests
+Tests Unitaires :
+
+Parser du nom de fichier (10 scénarios)
+
+Extractions OCR (20 PDFs tests)
+
+Validation des données
+
+Export Excel
+
+Tests d'Intégration :
+
+Upload → Parser → OCR → Base de données
+
+Dashboard → Rapports → Export
+
+Authentification → Autorisations
+
+Tests de Charge :
+
+100 uploads simultanés
+
+1000 requêtes sur le dashboard
+
+Génération rapport avec 10 000 lignes
+
+Tests Utilisateur :
+
+5 chefs d'équipe testent l'upload
+
+2 administrateurs testent le dashboard
+
+Feedback + corrections
+
+9.2 Critères d'Acceptation
+Critère	Seuil d'Acceptation
+Temps traitement PDF	< 3 secondes
+Taux extraction ND	100%
+Taux extraction N° Demande	> 95%
+Temps chargement dashboard	< 2 secondes
+Export Excel (1000 lignes)	< 5 secondes
+Disponibilité	99.5%
+10. Maintenance et Évolution
+10.1 Maintenance Préventive
+Fréquence	Action
+Hebdomadaire	Vérification logs d'erreurs
+Mensuel	Mise à jour Tesseract + dépendances
+Trimestriel	Revue des performances + optimisation
+Annuel	Audit sécurité + mise à jour majeure
+10.2 Évolutions Futures
+Priorité	Évolution	Impact
+Haute	Support des autres formats Senpil	Élargir compatibilité
+Haute	API pour intégration avec autres systèmes	Interopérabilité
+Moyenne	Dashboard avec plus de graphiques	Visibilité améliorée
+Moyenne	Alertes en cas d'anomalie	Réactivité
+Faible	App mobile	Accessibilité
+11. Annexes
+11.1 Glossaire
+Terme	Définition
+FTTH	Fiber To The Home - Fibre optique jusqu'au domicile
+ND	Numéro de Demande - Identifiant de l'intervention
+SAV	Service Après-Vente
+RIT	Réparation Intérieure Terminale
+Survey	Inspection / Évaluation technique
+Passage	Visite technique sans intervention majeure
+OCR	Optical Character Recognition - Reconnaissance optique de caractères
+Senpil Pro	Plateforme de gestion des interventions FTTH
+11.2 Listes de Référence
+Tâches autorisées :
+
+text
+- Survey
+- Passage
+- RIT
+- RIT + Survey
+- reléve
+- Installation
+- SAV
+- DIAG + REOR
+- DOWN/UP/RECONDUCTION
+- Modif Interieure
+Équipes :
+
+text
+- Ablaye DIOUF
+- Yakhya
+- Cheikh NDIAYE
+- Alysow DJIBA
+- Mor DRAME
+11.3 Liens Utiles
+Ressource	URL
+Tesseract OCR	https://github.com/tesseract-ocr/tesseract
+Flask Documentation	https://flask.palletsprojects.com
+MySQL Documentation	https://dev.mysql.com/doc
+Bootstrap 5	https://getbootstrap.com/docs/5.3
+12. Conclusion
+12.1 Récapitulatif
+Le projet propose une solution simple, fiable et efficace pour :
+
+Automatiser l'extraction des données des PDF Senpil Pro
+
+Centraliser les données dans une base MySQL
+
+Générer automatiquement les rapports de suivi
+
+Exporter les données au format Excel
+
+12.2 Points Forts
+✅ Approche pragmatique : 90% des données viennent du nom du fichier
+
+✅ OCR minimaliste : Un seul champ à extraire (N° Demande)
+
+✅ Validation humaine : Contrôle avant enregistrement
+
+✅ Architecture modulaire : Facile à faire évoluer
+
+✅ Délai réaliste : 6 semaines pour le MVP
+
+12.3 Prochaine Étape
+Validation de ce document de conception avec les parties prenantes avant de commencer le développement.
+
+Document créé le : 19 Août 2026
+Version : 1.0
+Auteur : Équipe Projet FTTH
