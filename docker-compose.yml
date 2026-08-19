@@ -27,7 +27,7 @@ services:
       - MYSQL_USER=suivi_user
       - MYSQL_PASSWORD=suivi_password
     ports:
-      - "3306:3306"
+      - "3309:3306"
     volumes:
       - db_volume:/var/lib/mysql
 
