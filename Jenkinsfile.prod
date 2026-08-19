@@ -1,0 +1,87 @@
+// Déploiement sur VPS (Préproduction/Production) via SSH
+// Jenkins reste sur la VM Ubuntu locale
+
+pipeline {
+    agent any
+    
+    environment {
+        // Configuration Docker Hub 
+        DOCKER_HUB_CREDENTIALS_ID = 'docker-hub-credentials'
+        DOCKER_IMAGE_NAME = 'laurentmd5/sse-suivi-ftth' 
+        DOCKER_IMAGE_TAG = "${BUILD_NUMBER}"
+        
+        // Configuration VPS
+        VPS_HOST = '167.86.106.160'
+        VPS_USER = 'deployer'
+        VPS_SSH_CREDENTIALS_ID = 'vps-preprod-ssh'
+        DEPLOY_PATH = '/opt/sse-suivi'
+        
+        // Fichiers
+        COMPOSE_FILE = 'docker-compose.prod.yml'
+        DOMAIN = 'tech.sse.sn'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Build & Push Docker Image') {
+            steps {
+                script {
+                    echo "Construction de l'image Docker..."
+                    sh "docker build -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} -t ${DOCKER_IMAGE_NAME}:latest ."
+                    
+                    echo "Push vers Docker Hub..."
+                    withCredentials([usernamePassword(credentialsId: DOCKER_HUB_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
+                        sh "docker push ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}"
+                        sh "docker push ${DOCKER_IMAGE_NAME}:latest"
+                    }
+                }
+            }
+        }
+        
+        stage('Deploy to VPS') {
+            steps {
+                script {
+                    echo "Déploiement sur le VPS..."
+                    // Utilisation du plugin SSH Agent dans Jenkins
+                    sshagent(credentials: [VPS_SSH_CREDENTIALS_ID]) {
+                        
+                        // 1. Création des répertoires nécessaires sur le VPS
+                        sh "ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} 'mkdir -p ${DEPLOY_PATH}/nginx'"
+                        
+                        // 2. Copie des fichiers de configuration vers le VPS
+                        sh "scp -o StrictHostKeyChecking=no ${COMPOSE_FILE} ${VPS_USER}@${VPS_HOST}:${DEPLOY_PATH}/${COMPOSE_FILE}"
+                        sh "scp -o StrictHostKeyChecking=no nginx/default.conf ${VPS_USER}@${VPS_HOST}:${DEPLOY_PATH}/nginx/default.conf"
+                        
+                        // 3. Mise à jour et redémarrage des conteneurs
+                        sh """
+                        ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} '
+                            cd ${DEPLOY_PATH}
+                            export IMAGE_TAG=${DOCKER_IMAGE_TAG}
+                            docker compose -f ${COMPOSE_FILE} pull
+                            docker compose -f ${COMPOSE_FILE} up -d
+                            
+                            # Optionnel : lancer automatiquement les migrations de base de données 
+                            # docker exec sse_suivi_web flask db upgrade
+                        '
+                        """
+                    }
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo "✅ Déploiement en PROD réussi sur http://${DOMAIN}"
+        }
+        failure {
+            echo "❌ Le déploiement PROD a échoué. Vérifiez les logs."
+        }
+    }
+}
