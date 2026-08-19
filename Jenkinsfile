@@ -27,9 +27,9 @@ pipeline {
                 script {
                     echo "Déploiement de l'application..."
                     // On down d'abord (optionnel, permet un redémarrage propre)
-                    sh "docker-compose down"
+                    sh "docker compose down"
                     // On lance en mode détaché
-                    sh "docker-compose up -d"
+                    sh "docker compose up -d"
                 }
             }
         }
