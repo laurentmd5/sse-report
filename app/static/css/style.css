@@ -1,29 +1,31 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 :root{
-  /* Thème Clair par défaut */
-  --bg-void: #F8FAFC;
+  /* Thème Clair par défaut - Contrasté et pro */
+  --bg-void: #F0F4F8; /* Gris-bleu très léger pour détacher les cartes */
   --bg-surface: #FFFFFF;
-  --bg-surface-2: #F1F5F9;
+  --bg-surface-2: #FFFFFF; /* Pour avoir des inputs bien blancs */
   --bg-surface-3: #E2E8F0;
-  --border: #E2E8F0;
-  --border-soft: #F1F5F9;
+  --border: #CBD5E1; /* Bordures plus définies */
+  --border-soft: #E2E8F0;
   --text-primary: #0F172A;
-  --text-secondary: #475569;
-  --text-tertiary: #64748B;
+  --text-secondary: #334155;
+  --text-tertiary: #475569;
   
-  /* NETSYSTEME - Bleu Clair (Cyan) - Accent principal */
-  --signal: #00AEEF;
-  --signal-dim: #E0F7FF;
-  --signal-glow: rgba(0, 174, 239, 0.18);
+  /* NETSYSTEME - Bleu Foncé (Action Principale, Fort contraste) */
+  --signal: #003366;
+  --signal-dim: #E6F0FA;
+  --signal-glow: rgba(0, 51, 102, 0.18);
+  --btn-text: #FFFFFF; /* Texte du bouton en blanc sur fond sombre */
   
-  /* NETSYSTEME - Bleu Foncé - Accent secondaire */
-  --fiber: #003366;
-  --fiber-dim: #E0EFFF;
-  --fiber-glow: rgba(0, 51, 102, 0.18);
+  /* NETSYSTEME - Bleu Clair / Cyan (Secondaire, Vibrance) */
+  --fiber: #00AEEF;
+  --fiber-dim: #E0F7FF;
+  --fiber-glow: rgba(0, 174, 239, 0.18);
+  --fiber-text: #0B0F14;
   
-  --danger: #F0546B;
-  --warn: #F2B84B;
+  --danger: #E3000F; /* Rouge Netsysteme */
+  --warn: #F59E0B;
   --radius: 10px;
   --radius-sm: 6px;
   font-family: 'Inter', sans-serif;
@@ -41,13 +43,17 @@
   --text-secondary: #8A97A8;
   --text-tertiary: #5C6779;
   
+  /* En mode sombre, le Bleu Clair ressort mieux comme action principale */
   --signal: #00AEEF;
   --signal-dim: #004b66;
   --signal-glow: rgba(0, 174, 239, 0.18);
+  --btn-text: #0B0F14; /* Texte foncé sur bouton cyan clair */
   
-  --fiber: #4DA6FF; /* Version plus claire du bleu foncé pour le mode sombre */
+  /* Et le bleu foncé s'éclaircit pour rester lisible */
+  --fiber: #4DA6FF; 
   --fiber-dim: #002244;
   --fiber-glow: rgba(77, 166, 255, 0.18);
+  --fiber-text: #0B0F14;
 }
 
 *{box-sizing:border-box; margin:0; padding:0;}
@@ -124,8 +130,8 @@ body{
   padding:9px 20px;
   color:#0B0F14;
 }
-.bcbar.signal{background:linear-gradient(90deg, var(--signal), #FF9A4D);}
-.bcbar.fiber{background:linear-gradient(90deg, var(--fiber), #6EE7DA); color:#062421;}
+.bcbar.signal{background:var(--signal); color:var(--btn-text);}
+.bcbar.fiber{background:var(--fiber); color:var(--fiber-text);}
 .bcbar .seg{opacity:0.85;}
 .bcbar .sep{opacity:0.5;}
 .bcbar .seg.strong{opacity:1; font-weight:700;}
@@ -136,9 +142,9 @@ body{
   flex-shrink:0;
 }
 @keyframes pulseDot{
-  0%{box-shadow:0 0 0 0 rgba(255,122,26,0.5);}
-  70%{box-shadow:0 0 0 7px rgba(255,122,26,0);}
-  100%{box-shadow:0 0 0 0 rgba(255,122,26,0);}
+  0%{box-shadow:0 0 0 0 var(--signal);}
+  70%{box-shadow:0 0 0 7px transparent;}
+  100%{box-shadow:0 0 0 0 transparent;}
 }
 
 /* ================= SCREEN 1 — CONNEXION ================= */
@@ -150,13 +156,14 @@ body{
   border-radius:var(--radius);
   padding:38px 34px 30px;
   position:relative;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.03);
 }
 .login-wordmark{
   display:flex; align-items:center; gap:10px; margin-bottom:6px;
 }
 .login-wordmark .dot{
   width:9px; height:9px; border-radius:50%; background:var(--signal);
-  box-shadow:0 0 0 0 rgba(255,122,26,0.5);
+  box-shadow:0 0 0 0 var(--signal);
   animation:pulseDot 2s ease-out infinite;
 }
 .login-wordmark .txt{
@@ -180,7 +187,7 @@ body{
 .field input:focus, .field select:focus{outline:none; border-color:var(--signal); box-shadow:0 0 0 3px var(--signal-glow);}
 .btn-primary{
   width:100%; padding:12px; border:none; border-radius:var(--radius-sm);
-  background:var(--signal); color:#1A0D02; font-weight:700; font-size:14px;
+  background:var(--signal); color:var(--btn-text); font-weight:700; font-size:14px;
   cursor:pointer; margin-top:6px; transition:filter .15s;
   font-family:'Inter', sans-serif; text-decoration: none; text-align: center; display: inline-block;
 }
@@ -325,7 +332,7 @@ table.data td.client{color:var(--text-primary); font-weight:500;}
 .val-actions{display:flex; align-items:center; gap:12px; margin-top:6px;}
 .btn-validate{
   flex:1; padding:13px; border:none; border-radius:var(--radius-sm);
-  background:var(--fiber); color:#062421; font-weight:700; font-size:14px; cursor:pointer;
+  background:var(--fiber); color:var(--fiber-text); font-weight:700; font-size:14px; cursor:pointer;
   font-family:'Inter', sans-serif; transition:filter .15s;
 }
 .btn-validate:hover{filter:brightness(1.08);}
@@ -354,7 +361,7 @@ table.data td.client{color:var(--text-primary); font-weight:500;}
 
 .panel{
   background:var(--bg-surface); border:1px solid var(--border-soft); border-radius:var(--radius);
-  padding:22px 24px; margin-bottom:22px;
+  padding:22px 24px; margin-bottom:22px; box-shadow: 0 10px 25px rgba(0,0,0,0.03);
 }
 .panel h3{font-family:'Space Grotesk', sans-serif; font-size:15px; font-weight:600; margin-bottom:20px;}
 .panel-header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:20px; }
