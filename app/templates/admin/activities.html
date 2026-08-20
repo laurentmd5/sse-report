@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Journal d'Activité{% endblock %}
+
+{% block content %}
+<div class="bcbar signal">
+  <span class="pulse-dot"></span>
+  <span class="seg strong">Administration</span>
+  <span class="sep">/</span>
+  <span class="seg">Activités</span>
+</div>
+
+<div class="app-shell">
+  <div class="topbar">
+    <div class="who">
+      <div class="avatar" style="color:var(--fiber)">AD</div>
+      <div>
+        <div class="name">Journal d'Activité</div>
+        <div class="role">Traçabilité système</div>
+      </div>
+    </div>
+    <div>
+        <a href="{{ url_for('admin.manage_users') }}" class="btn-ghost">Utilisateurs</a>
+        <a href="{{ url_for('main.dashboard') }}" class="btn-ghost" style="margin-right:8px;">Retour Dashboard</a>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <h3>Historique des actions (100 dernières)</h3>
+    </div>
+
+    <table class="data">
+      <thead>
+        <tr>
+          <th>Date & Heure</th>
+          <th>Utilisateur</th>
+          <th>Action</th>
+          <th>Détails</th>
+          <th>Adresse IP</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td style="white-space:nowrap;">{{ log.timestamp.strftime('%d/%m/%Y %H:%M') }}</td>
+          <td>
+            {% if log.user %}
+              <strong style="color:var(--text-primary)">{{ log.user.username }}</strong>
+            {% else %}
+              <em style="color:var(--text-tertiary)">Système/Inconnu</em>
+            {% endif %}
+          </td>
+          <td><span class="task-pill">{{ log.action }}</span></td>
+          <td style="font-size:12px;">{{ log.details or '-' }}</td>
+          <td style="font-family:'JetBrains Mono', monospace; font-size:11px;">{{ log.ip_address }}</td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5" style="text-align:center; padding:20px;">Aucune activité enregistrée pour le moment.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

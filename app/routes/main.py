@@ -4,8 +4,9 @@ from flask import Blueprint, render_template, redirect, url_for, request, curren
 from flask_login import login_required, current_user
 from app.models.intervention import Intervention
 from app.services.parser import parse_filename
-from app.services.ocr import extract_demande_number
+from app.services.ocr import extract_pdf_data
 from app.services.validation import validate_extracted_data
+from app.services.activity import log_activity
 from app import db
 
 bp = Blueprint('main', __name__)
@@ -83,7 +84,7 @@ def upload():
         parsed_data = parse_filename(file.filename)
         
         # 2. OCR
-        ocr_data = extract_demande_number(filepath)
+        ocr_data = extract_pdf_data(filepath)
         
         # 3. Validation
         validation_data = validate_extracted_data(parsed_data, ocr_data)
@@ -132,5 +133,31 @@ def save_intervention():
     db.session.add(new_intervention)
     db.session.commit()
     
+    log_activity("Création Intervention", f"Intervention ND {nd} (Demande: {demande_no}) créée.")
     flash(f"L'intervention {nd} a été enregistrée avec succès !", "success")
     return redirect(url_for('main.dashboard'))
+
+@bp.route('/edit_intervention/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_intervention(id):
+    intervention = Intervention.query.get_or_404(id)
+    
+    # Vérifier que le chef d'équipe a le droit de modifier (ou admin)
+    if not current_user.is_admin() and intervention.team_leader_id != current_user.id:
+        flash("Accès refusé.", "danger")
+        return redirect(url_for('main.dashboard'))
+        
+    if request.method == 'POST':
+        old_nd = intervention.nd
+        intervention.nd = request.form.get('nd')
+        intervention.task_type = request.form.get('task_type')
+        intervention.client_name = request.form.get('client_name')
+        intervention.demande_no = request.form.get('demande_no')
+        intervention.validation_status = 'corrected' # Marquer comme corrigé après coup
+        
+        db.session.commit()
+        log_activity("Modification Intervention", f"Intervention {old_nd} modifiée.")
+        flash(f"L'intervention {intervention.nd} a été modifiée avec succès.", "success")
+        return redirect(url_for('main.dashboard'))
+        
+    return render_template('team_leader/edit_intervention.html', intervention=intervention)

@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion des Utilisateurs{% endblock %}
+
+{% block content %}
+<div class="bcbar signal">
+  <span class="pulse-dot"></span>
+  <span class="seg strong">Administration</span>
+  <span class="sep">/</span>
+  <span class="seg">Utilisateurs</span>
+</div>
+
+<div class="app-shell">
+  <div class="topbar">
+    <div class="who">
+      <div class="avatar" style="color:var(--fiber)">AD</div>
+      <div>
+        <div class="name">Gestion des Comptes</div>
+        <div class="role">Admin et Chefs d'équipe</div>
+      </div>
+    </div>
+    <div>
+        <a href="{{ url_for('admin.manage_teams') }}" class="btn-ghost">Équipes</a>
+        <a href="{{ url_for('admin.view_activities') }}" class="btn-ghost">Activités</a>
+        <a href="{{ url_for('main.dashboard') }}" class="btn-ghost" style="margin-right:8px;">Retour Dashboard</a>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <h3>Liste des Utilisateurs</h3>
+      <button class="btn-export" onclick="document.getElementById('modal-add-admin').classList.add('active')">+ Nouvel Admin</button>
+    </div>
+
+    <table class="data">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nom / Pseudo</th>
+          <th>Email</th>
+          <th>Rôle</th>
+          <th>Date de Création</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>#{{ u.id }}</td>
+          <td class="client">{{ u.full_name }}<br><span style="font-size:11px; color:var(--text-tertiary);">{{ u.username }}</span></td>
+          <td>{{ u.email }}</td>
+          <td>
+            {% if u.role == 'admin' %}
+              <span class="badge ok">Admin</span>
+            {% else %}
+              <span class="badge pending">Chef d'équipe</span>
+            {% endif %}
+          </td>
+          <td>{{ u.created_at.strftime('%d/%m/%Y') }}</td>
+          <td>
+            <button class="btn-ghost" style="padding: 4px 8px; font-size:11px;" onclick="openResetModal({{ u.id }}, '{{ u.username }}')">Changer Mdp</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Nouvel Admin -->
+<div id="modal-add-admin" class="modal-overlay" onclick="if(event.target==this) this.classList.remove('active')">
+  <div class="modal-content">
+    <h3 class="modal-title">Créer un Administrateur</h3>
+    <form action="{{ url_for('admin.add_admin') }}" method="POST">
+      <div class="field">
+        <label>Nom complet</label>
+        <input type="text" name="admin_fullname" required>
+      </div>
+      <div class="field">
+        <label>Identifiant (Username)</label>
+        <input type="text" name="admin_username" required>
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" name="admin_email" required>
+      </div>
+      <div class="field">
+        <label>Mot de passe</label>
+        <input type="password" name="admin_password" required minlength="6">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" onclick="document.getElementById('modal-add-admin').classList.remove('active')">Annuler</button>
+        <button type="submit" class="btn-primary" style="margin:0; width:auto; padding:9px 15px;">Créer Admin</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Reset Password -->
+<div id="modal-reset" class="modal-overlay" onclick="if(event.target==this) this.classList.remove('active')">
+  <div class="modal-content">
+    <h3 class="modal-title">Réinitialiser Mot de Passe</h3>
+    <form id="reset-form" action="" method="POST">
+      <div class="field">
+        <label>Utilisateur</label>
+        <input type="text" id="reset-username" disabled style="background:var(--bg-surface-2); color:var(--text-tertiary);">
+      </div>
+      <div class="field">
+        <label>Nouveau Mot de passe</label>
+        <input type="password" name="new_password" required minlength="6">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" onclick="document.getElementById('modal-reset').classList.remove('active')">Annuler</button>
+        <button type="submit" class="btn-primary" style="margin:0; width:auto; padding:9px 15px; background:var(--warn); color:#000;">Forcer Mot de passe</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openResetModal(userId, username) {
+    document.getElementById('reset-username').value = username;
+    document.getElementById('reset-form').action = "{{ url_for('admin.manage_users') }}/reset_password/" + userId;
+    document.getElementById('modal-reset').classList.add('active');
+}
+</script>
+{% endblock %}

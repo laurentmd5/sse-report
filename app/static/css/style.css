@@ -23,6 +23,24 @@
   font-family: 'Inter', sans-serif;
 }
 
+[data-theme="light"] {
+  --bg-void: #F8FAFC;
+  --bg-surface: #FFFFFF;
+  --bg-surface-2: #F1F5F9;
+  --bg-surface-3: #E2E8F0;
+  --border: #E2E8F0;
+  --border-soft: #F1F5F9;
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-tertiary: #64748B;
+  
+  --signal-dim: #FFEDD5;
+  --signal-glow: rgba(255, 122, 26, 0.08);
+  
+  --fiber-dim: #CCFBF1;
+  --fiber-glow: rgba(45, 212, 191, 0.08);
+}
+
 *{box-sizing:border-box; margin:0; padding:0;}
 body{
   background:var(--bg-void);

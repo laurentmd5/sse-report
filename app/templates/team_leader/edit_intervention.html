@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier l'intervention{% endblock %}
+
+{% block content %}
+<section id="screen-validation">
+  <div class="validation-wrap">
+    <div class="bcbar fiber">
+      <span class="pulse-dot"></span>
+      <span class="seg strong">Modification</span>
+      <span class="sep">/</span>
+      <span class="seg">{{ intervention.nd }}</span>
+    </div>
+
+    <div style="padding:0 4px;">
+      <div class="val-filecard">
+        <div class="fico">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l5 5v15H6z"/><path d="M15 2v5h5"/></svg>
+        </div>
+        <div class="fname">{{ intervention.pdf_filename }}</div>
+      </div>
+
+      <form action="{{ url_for('main.edit_intervention', id=intervention.id) }}" method="POST">
+          <div class="val-panel">
+            <div class="val-row">
+              <div class="field-name">ND</div>
+              <div class="field-val"><input type="text" name="nd" value="{{ intervention.nd }}" required></div>
+            </div>
+            <div class="val-row">
+              <div class="field-name">Tâche</div>
+              <div class="field-val"><input type="text" name="task_type" value="{{ intervention.task_type }}" required></div>
+            </div>
+            <div class="val-row">
+              <div class="field-name">Client</div>
+              <div class="field-val client"><input type="text" name="client_name" value="{{ intervention.client_name }}" required></div>
+            </div>
+            <div class="val-row">
+              <div class="field-name">N° Demande</div>
+              <div class="field-val">
+                  <input type="text" name="demande_no" value="{{ intervention.demande_no or '' }}">
+              </div>
+            </div>
+          </div>
+
+          <div class="val-actions">
+            <button type="submit" class="btn-validate">Enregistrer les modifications</button>
+            <a href="{{ url_for('main.dashboard') }}" class="btn-cancel" style="text-decoration:none; text-align:center; display:inline-block;">Annuler</a>
+          </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 from app.models.user import User
 from app import db, bcrypt
+from app.services.activity import log_activity
 
 bp = Blueprint('auth', __name__)
 
@@ -22,6 +23,7 @@ def login():
                 return redirect(url_for('auth.login'))
                 
             login_user(user, remember=True)
+            log_activity("Connexion", "L'utilisateur s'est connecté.")
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('main.dashboard'))
         else:
@@ -32,5 +34,6 @@ def login():
 @bp.route('/logout')
 @login_required
 def logout():
+    log_activity("Déconnexion", "L'utilisateur s'est déconnecté.")
     logout_user()
     return redirect(url_for('auth.login'))

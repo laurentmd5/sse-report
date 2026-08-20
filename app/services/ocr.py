@@ -32,60 +32,75 @@ def preprocess_image(image_bytes):
     
     return binary
 
-def extract_demande_number(pdf_path, target_pages=[0, 1, 2]):
+def extract_pdf_data(pdf_path, target_pages=[0, 1, 2]):
     """
-    Extrait le numéro de demande (8-10 chiffres) depuis les premières pages du PDF.
+    Extrait le numéro de demande, le ND et le nom du client depuis le PDF.
     """
     start_time = time.time()
     extracted_demande = None
+    extracted_nd = None
+    extracted_client = None
     confidence = 0
     raw_text_extracted = ""
     error_msg = None
 
     try:
-        # Ouvrir le PDF
         pdf_document = fitz.open(pdf_path)
-        
-        # Le pattern cherche une suite d'au moins 8 chiffres (parfois précédé d'espaces/lettres)
-        pattern = re.compile(r'\b(\d{8,10})\b')
         
         for page_num in target_pages:
             if page_num >= len(pdf_document):
                 break
                 
             page = pdf_document[page_num]
-            
-            # Conversion en image (300 DPI)
-            zoom = 300 / 72  # 72 est la valeur par défaut
+            zoom = 300 / 72
             mat = fitz.Matrix(zoom, zoom)
             pix = page.get_pixmap(matrix=mat, alpha=False)
             
-            # Prétraitement de l'image
             processed_img = preprocess_image(pix.tobytes("jpeg"))
             
-            # OCR avec Tesseract (psm 6 = Assume a single uniform block of text)
-            # langues = fra+eng
             custom_config = r'--oem 3 --psm 6'
             try:
                 raw_text = pytesseract.image_to_string(processed_img, lang='fra+eng', config=custom_config)
                 raw_text_extracted += f"--- Page {page_num+1} ---\n{raw_text}\n"
                 
-                # Amélioration de l'extraction : on cherche explicitement "Commande" ou "Demande"
-                # suivi de caractères alphanumériques
-                advanced_pattern = re.compile(r'(?:commande|demande|cmd|order|n\s*°)[^\w]*([A-Z0-9-]{7,15})', re.IGNORECASE)
-                adv_matches = advanced_pattern.findall(raw_text)
+                # 1. Numéro de Demande (ex: INTERVENTION / 26906456 ou Commande 12345678)
+                if not extracted_demande:
+                    demande_patterns = [
+                        r'INTERVENTION\s*/\s*(\d{7,15})',
+                        r'(?:commande|demande|cmd|order|n\s*°)[^\w]*([A-Z0-9-]{7,15})'
+                    ]
+                    for pat in demande_patterns:
+                        matches = re.findall(pat, raw_text, re.IGNORECASE)
+                        if matches:
+                            extracted_demande = matches[0].strip()
+                            break
+                    if not extracted_demande:
+                        fallback_matches = re.findall(r'\b(\d{8,10})\b', raw_text)
+                        if fallback_matches:
+                            extracted_demande = fallback_matches[0]
                 
-                if adv_matches:
-                    extracted_demande = adv_matches[0]
+                # 2. Nom du client (ex: Nom du client \n NDEYE MBENGUE)
+                if not extracted_client:
+                    client_match = re.search(r'Nom du client\s*\n\s*([A-Za-zÀ-ÿ\s]+)', raw_text, re.IGNORECASE)
+                    if client_match:
+                        # Nettoyer un peu le nom
+                        name = client_match.group(1).strip()
+                        if len(name) > 3 and "\n" not in name:
+                            extracted_client = name
+
+                # 3. Numéro ND (généralement 9 chiffres commençant par 33, 77, 78, 76, 75, 70)
+                if not extracted_nd:
+                    # On cherche ND ou nd suivi du numéro, ou juste un numéro à 9 chiffres valide
+                    nd_match = re.search(r'\b(33|7[05678])\d{7}\b', raw_text)
+                    if nd_match:
+                        extracted_nd = nd_match.group(0)
+
+                # Si on a trouvé la demande (le plus dur), on augmente la confiance
+                if extracted_demande:
                     confidence = 90
-                    break
-                
-                # Chercher le pattern basique (8 à 10 chiffres)
-                matches = pattern.findall(raw_text)
-                if matches:
-                    extracted_demande = matches[0]
-                    confidence = 80
-                    break
+                    if extracted_nd and extracted_client:
+                        break # On a tout trouvé
+                        
             except Exception as e:
                 error_msg = f"Erreur Tesseract: {str(e)}"
                 break
@@ -99,8 +114,10 @@ def extract_demande_number(pdf_path, target_pages=[0, 1, 2]):
     processing_time = int((time.time() - start_time) * 1000)
     
     return {
-        'success': extracted_demande is not None,
+        'success': extracted_demande is not None or extracted_nd is not None,
         'demande_no': extracted_demande,
+        'nd': extracted_nd,
+        'client_name': extracted_client,
         'confidence': confidence,
         'raw_text': raw_text_extracted,
         'processing_time_ms': processing_time,

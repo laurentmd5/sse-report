@@ -20,7 +20,9 @@
       </div>
     </div>
     <div>
-        <a href="{{ url_for('admin.manage_teams') }}" class="btn-ghost" style="margin-right:8px;">Gérer Équipes</a>
+        <a href="{{ url_for('admin.manage_teams') }}" class="btn-ghost" style="margin-right:8px;">Équipes</a>
+        <a href="{{ url_for('admin.manage_users') }}" class="btn-ghost" style="margin-right:8px;">Utilisateurs</a>
+        <a href="{{ url_for('admin.view_activities') }}" class="btn-ghost" style="margin-right:8px;">Activités</a>
         <a href="{{ url_for('auth.logout') }}" class="btn-ghost danger">Déconnexion</a>
     </div>
   </div>

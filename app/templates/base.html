@@ -3,12 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>{% block title %}SSE Suivi FTTH{% endblock %}</title>
+    <title>{% block title %}Suivi FTTH{% endblock %}</title>
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script>
+      // Appliquer le thème dès que possible pour éviter un "flash"
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme === "light") {
+          document.documentElement.setAttribute("data-theme", "light");
+      }
+    </script>
     {% block head %}{% endblock %}
 </head>
 <body>
+    <button id="theme-toggle" class="btn-ghost" style="position:fixed; top:15px; right:15px; z-index:9999; padding:8px 12px; border-radius:var(--radius-sm);">
+        <span class="icon">🌓</span>
+    </button>
+
     <!-- Arrière-plan fibre -->
     <div class="bg-fiber">
       <svg viewBox="0 0 1200 800" preserveAspectRatio="none">
@@ -36,6 +47,17 @@
         {% block content %}{% endblock %}
     </div>
 
-    {% block scripts %}{% endblock %}
+    <script>
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+          const root = document.documentElement;
+          if (root.getAttribute('data-theme') === 'light') {
+              root.removeAttribute('data-theme');
+              localStorage.setItem('theme', 'dark');
+          } else {
+              root.setAttribute('data-theme', 'light');
+              localStorage.setItem('theme', 'light');
+          }
+      });
+    </script>
 </body>
 </html>

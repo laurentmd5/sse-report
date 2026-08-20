@@ -57,7 +57,7 @@
   </div>
   <table class="data">
     <thead>
-      <tr><th>Date</th><th>ND</th><th>Client</th><th>Tâche</th><th>N° Demande</th><th>Statut</th></tr>
+      <tr><th>Date</th><th>ND</th><th>Client</th><th>Tâche</th><th>N° Demande</th><th>Statut</th><th>Actions</th></tr>
     </thead>
     <tbody>
         {% for intervention in interventions %}
@@ -76,10 +76,13 @@
                     <span class="badge edited">✎ corrigée</span>
                 {% endif %}
             </td>
+            <td>
+                <a href="{{ url_for('main.edit_intervention', id=intervention.id) }}" class="btn-ghost" style="padding:4px 8px; font-size:12px; text-decoration:none;">✏️ Modifier</a>
+            </td>
         </tr>
         {% else %}
         <tr>
-            <td colspan="6" style="text-align:center; padding:30px;">Aucune intervention enregistrée ce mois-ci.</td>
+            <td colspan="7" style="text-align:center; padding:30px;">Aucune intervention enregistrée ce mois-ci.</td>
         </tr>
         {% endfor %}
     </tbody>
