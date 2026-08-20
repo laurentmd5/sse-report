@@ -115,7 +115,7 @@ body{
 }
 
 /* ================= SCREEN 1 — CONNEXION ================= */
-#screen-login{display:flex; align-items:center; justify-content:center; padding:80px 20px;}
+#screen-login{display:flex; align-items:center; justify-content:center; padding:80px 20px; min-height: 100vh; min-height: 100dvh;}
 .login-card{
   width:100%; max-width:380px;
   background:var(--bg-surface);
