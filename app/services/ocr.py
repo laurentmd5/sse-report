@@ -79,13 +79,13 @@ def extract_pdf_data(pdf_path, target_pages=[0, 1, 2]):
                         if fallback_matches:
                             extracted_demande = fallback_matches[0]
                 
-                # 2. Nom du client (ex: Nom du client \n NDEYE MBENGUE)
+                # 2. Nom du client (ex: Nom du client \n NDEYE MBENGUE ou Nom du client: abdoulaye Mboup)
                 if not extracted_client:
-                    client_match = re.search(r'Nom du client\s*\n\s*([A-Za-zÀ-ÿ\s]+)', raw_text, re.IGNORECASE)
+                    client_match = re.search(r'Nom du client[\s:]*([^\n]+)', raw_text, re.IGNORECASE)
                     if client_match:
                         # Nettoyer un peu le nom
                         name = client_match.group(1).strip()
-                        if len(name) > 3 and "\n" not in name:
+                        if len(name) > 3:
                             extracted_client = name
 
                 # 3. Numéro ND (généralement 9 chiffres commençant par 33)
