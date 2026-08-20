@@ -12,7 +12,7 @@ def validate_extracted_data(parsed_data, ocr_data):
     client_name = ocr_data.get('client_name') or (parsed.get('client_name') if is_parsed_ok else None)
     task_type = parsed.get('task_type') if is_parsed_ok else None # L'OCR n'extrait pas la tâche pour l'instant
     
-    demande_no = ocr_data.get('demande_no')
+    demande_no = ocr_data.get('demande_no') or (parsed.get('demande_no') if is_parsed_ok else None)
     ocr_confidence = ocr_data.get('confidence', 0)
     
     # Calcul du score de confiance global (simplifié)
