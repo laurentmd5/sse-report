@@ -88,12 +88,22 @@ def extract_pdf_data(pdf_path, target_pages=[0, 1, 2]):
                         if len(name) > 3 and "\n" not in name:
                             extracted_client = name
 
-                # 3. Numéro ND (généralement 9 chiffres commençant par 33, 77, 78, 76, 75, 70)
+                # 3. Numéro ND (généralement 9 chiffres commençant par 33)
                 if not extracted_nd:
-                    # On cherche ND ou nd suivi du numéro, ou juste un numéro à 9 chiffres valide
-                    nd_match = re.search(r'\b(33|7[05678])\d{7}\b', raw_text)
-                    if nd_match:
-                        extracted_nd = nd_match.group(0)
+                    # On privilégie un numéro fixe (33) car le mobile (77, etc.) est souvent le "Contact client"
+                    nd_match_33 = re.search(r'\b(33\d{7})\b', raw_text)
+                    if nd_match_33:
+                        extracted_nd = nd_match_33.group(1)
+                    else:
+                        # Si pas de 33, on cherche le mot ND explicitement suivi d'un numéro
+                        nd_match_explicit = re.search(r'\bND\b\s*\n?\s*(7[05678]\d{7})\b', raw_text, re.IGNORECASE)
+                        if nd_match_explicit:
+                            extracted_nd = nd_match_explicit.group(1)
+                        else:
+                            # Dernier recours : le premier numéro à 9 chiffres trouvé
+                            nd_match_any = re.search(r'\b(7[05678]\d{7})\b', raw_text)
+                            if nd_match_any:
+                                extracted_nd = nd_match_any.group(1)
 
                 # Si on a trouvé la demande (le plus dur), on augmente la confiance
                 if extracted_demande:
