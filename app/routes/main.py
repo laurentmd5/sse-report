@@ -178,3 +178,30 @@ def edit_intervention(id):
         return redirect(url_for('main.dashboard'))
         
     return render_template('team_leader/edit_intervention.html', intervention=intervention)
+
+@bp.route('/delete_intervention/<int:id>', methods=['POST'])
+@login_required
+def delete_intervention(id):
+    intervention = Intervention.query.get_or_404(id)
+    
+    # Vérifier que le chef d'équipe a le droit de supprimer (ou admin)
+    if not current_user.is_admin() and intervention.team_leader_id != current_user.id:
+        flash("Accès refusé.", "danger")
+        return redirect(url_for('main.dashboard'))
+        
+    # Suppression du fichier physique associé
+    if intervention.pdf_path and os.path.exists(intervention.pdf_path):
+        try:
+            os.remove(intervention.pdf_path)
+        except Exception:
+            pass # Si le fichier n'existe plus, on l'ignore
+            
+    # Traçabilité
+    log_activity("Suppression Intervention", f"Intervention {intervention.nd} (Demande: {intervention.demande_no}) supprimée.")
+    
+    # Suppression en base de données
+    db.session.delete(intervention)
+    db.session.commit()
+    
+    flash("La fiche d'intervention a été supprimée avec succès.", "success")
+    return redirect(url_for('main.dashboard'))
