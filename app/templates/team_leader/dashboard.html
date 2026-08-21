@@ -26,13 +26,18 @@
   </div>
 
   <form action="{{ url_for('main.upload') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
-      <div class="dropzone" id="dropZone" onclick="document.getElementById('pdfFile').click()">
+      <div class="dropzone" id="dropZone" style="position: relative;" onclick="document.getElementById('pdfFile').click()">
+        
+        <div id="loaderOverlay" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(255,255,255,0.9); flex-direction:column; align-items:center; justify-content:center; z-index:10; border-radius:12px;">
+            <div class="loader"></div>
+            <div class="main-txt" style="color:var(--signal); font-weight:600; margin-top:10px;">Analyse en cours...</div>
+        </div>
         <div class="ico">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0-12 4 4m-4-4-4 4M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/></svg>
         </div>
         <div class="main-txt">Glissez-déposez un PDF Senpil Pro</div>
         <div class="sub-txt">ou cliquez pour sélectionner un fichier</div>
-        <input type="file" name="pdf_file" id="pdfFile" style="display:none;" accept=".pdf" required onchange="document.getElementById('uploadForm').submit()">
+        <input type="file" name="pdf_file" id="pdfFile" style="display:none;" accept=".pdf" required onchange="showLoading(); document.getElementById('uploadForm').submit()">
       </div>
   </form>
 
@@ -112,11 +117,21 @@
         e.stopPropagation();
     }
     
+    
+    function showLoading() {
+        document.getElementById('loaderOverlay').style.display = 'flex';
+    }
+    
+    document.getElementById('uploadForm').addEventListener('submit', function() {
+        showLoading();
+    });
+
     dropZone.addEventListener('drop', (e) => {
         const dt = e.dataTransfer;
         const files = dt.files;
         if(files.length) {
             document.getElementById('pdfFile').files = files;
+            showLoading();
             document.getElementById('uploadForm').submit();
         }
     });
