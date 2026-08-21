@@ -48,7 +48,8 @@ def add_team():
             email=leader_email,
             password_hash=hashed_password,
             role='team_leader',
-            full_name=leader_fullname
+            full_name=leader_fullname,
+            must_change_password=True
         )
         db.session.add(new_leader)
         db.session.flush() # Pour obtenir l'ID de l'utilisateur sans commit
@@ -119,7 +120,8 @@ def add_admin():
             email=admin_email,
             password_hash=hashed_password,
             role='admin',
-            full_name=admin_fullname
+            full_name=admin_fullname,
+            must_change_password=True
         )
         db.session.add(new_admin)
         db.session.commit()
@@ -144,6 +146,7 @@ def reset_password(user_id):
         
     try:
         user.password_hash = bcrypt.generate_password_hash(new_password).decode('utf-8')
+        user.must_change_password = True
         db.session.commit()
         
         log_activity("Réinitialisation Mot de passe", f"Le mot de passe de '{user.username}' (ID: {user.id}) a été réinitialisé.")

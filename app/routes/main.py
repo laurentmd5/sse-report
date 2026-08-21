@@ -27,12 +27,12 @@ def dashboard():
         now = datetime.now()
         stats = get_monthly_stats(now.year, now.month)
         
-        mois_fr = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"]
+        mois_fr = ["Janvier", "FÃ©vrier", "Mars", "Avril", "Mai", "Juin", "Juillet", "AoÃ»t", "Septembre", "Octobre", "Novembre", "DÃ©cembre"]
         month_str = f"{mois_fr[now.month - 1]} {now.year}"
         
         return render_template('admin/dashboard.html', stats=stats, month=month_str)
     else:
-        # Dashboard Chef d'Équipe
+        # Dashboard Chef d'Ãquipe
         interventions = Intervention.query.filter_by(
             team_leader_id=current_user.id
         ).order_by(Intervention.intervention_date.desc()).all()
@@ -43,7 +43,7 @@ def dashboard():
 @login_required
 def export_excel():
     if not current_user.is_admin():
-        flash("Accès refusé.", "danger")
+        flash("AccÃ¨s refusÃ©.", "danger")
         return redirect(url_for('main.dashboard'))
         
     from datetime import datetime
@@ -66,12 +66,12 @@ def export_excel():
 @login_required
 def upload():
     if 'pdf_file' not in request.files:
-        flash('Aucun fichier sélectionné.', 'danger')
+        flash('Aucun fichier sÃ©lectionnÃ©.', 'danger')
         return redirect(url_for('main.dashboard'))
         
     file = request.files['pdf_file']
     if file.filename == '':
-        flash('Aucun fichier sélectionné.', 'danger')
+        flash('Aucun fichier sÃ©lectionnÃ©.', 'danger')
         return redirect(url_for('main.dashboard'))
         
     if file and file.filename.lower().endswith('.pdf'):
@@ -97,13 +97,13 @@ def upload():
             validation_data=validation_data
         )
     else:
-        flash('Format de fichier non autorisé. Uniquement PDF.', 'danger')
+        flash('Format de fichier non autorisÃ©. Uniquement PDF.', 'danger')
         return redirect(url_for('main.dashboard'))
 
 @bp.route('/save_intervention', methods=['POST'])
 @login_required
 def save_intervention():
-    # Récupération des données du formulaire validé
+    # RÃ©cupÃ©ration des donnÃ©es du formulaire validÃ©
     nd = request.form.get('nd')
     demande_no = request.form.get('demande_no')
     task_type = request.form.get('task_type')
@@ -113,7 +113,7 @@ def save_intervention():
     confidence = int(request.form.get('confidence_score', 0))
     extraction_method = request.form.get('extraction_method', 'manual')
     
-    # Règle anti-doublon : Même ND + Même Tâche + Même Numéro de demande
+    # RÃ¨gle anti-doublon : MÃªme ND + MÃªme TÃ¢che + MÃªme NumÃ©ro de demande
     existing_intervention = Intervention.query.filter_by(
         nd=nd, 
         task_type=task_type, 
@@ -121,8 +121,8 @@ def save_intervention():
     ).first()
     
     if existing_intervention:
-        flash(f"Impossible d'enregistrer : Une intervention avec ce ND ({nd}), cette tâche ({task_type}) et ce N° Demande ({demande_no}) existe déjà.", "danger")
-        # On peut optionnellement supprimer le fichier uploadé pour ne pas polluer le disque
+        flash(f"Impossible d'enregistrer : Une intervention avec ce ND ({nd}), cette tÃ¢che ({task_type}) et ce NÂ° Demande ({demande_no}) existe dÃ©jÃ .", "danger")
+        # On peut optionnellement supprimer le fichier uploadÃ© pour ne pas polluer le disque
         if filepath and os.path.exists(filepath):
             try:
                 os.remove(filepath)
@@ -130,7 +130,7 @@ def save_intervention():
                 pass
         return redirect(url_for('main.dashboard'))
     
-    # Création de l'enregistrement
+    # CrÃ©ation de l'enregistrement
     from datetime import date
     new_intervention = Intervention(
         nd=nd,
@@ -138,7 +138,7 @@ def save_intervention():
         client_name=client_name,
         task_type=task_type,
         team_leader_id=current_user.id,
-        intervention_date=date.today(), # Par défaut, on pourrait l'extraire ou demander
+        intervention_date=date.today(), # Par dÃ©faut, on pourrait l'extraire ou demander
         pdf_filename=filename,
         pdf_path=filepath,
         confidence_score=confidence,
@@ -150,8 +150,8 @@ def save_intervention():
     db.session.add(new_intervention)
     db.session.commit()
     
-    log_activity("Création Intervention", f"Intervention ND {nd} (Demande: {demande_no}) créée.")
-    flash(f"L'intervention {nd} a été enregistrée avec succès !", "success")
+    log_activity("CrÃ©ation Intervention", f"Intervention ND {nd} (Demande: {demande_no}) crÃ©Ã©e.")
+    flash(f"L'intervention {nd} a Ã©tÃ© enregistrÃ©e avec succÃ¨s !", "success")
     return redirect(url_for('main.dashboard'))
 
 @bp.route('/edit_intervention/<int:id>', methods=['GET', 'POST'])
@@ -159,9 +159,9 @@ def save_intervention():
 def edit_intervention(id):
     intervention = Intervention.query.get_or_404(id)
     
-    # Vérifier que le chef d'équipe a le droit de modifier (ou admin)
+    # VÃ©rifier que le chef d'Ã©quipe a le droit de modifier (ou admin)
     if not current_user.is_admin() and intervention.team_leader_id != current_user.id:
-        flash("Accès refusé.", "danger")
+        flash("AccÃ¨s refusÃ©.", "danger")
         return redirect(url_for('main.dashboard'))
         
     if request.method == 'POST':
@@ -170,11 +170,11 @@ def edit_intervention(id):
         intervention.task_type = request.form.get('task_type')
         intervention.client_name = request.form.get('client_name')
         intervention.demande_no = request.form.get('demande_no')
-        intervention.validation_status = 'corrected' # Marquer comme corrigé après coup
+        intervention.validation_status = 'corrected' # Marquer comme corrigÃ© aprÃ¨s coup
         
         db.session.commit()
-        log_activity("Modification Intervention", f"Intervention {old_nd} modifiée.")
-        flash(f"L'intervention {intervention.nd} a été modifiée avec succès.", "success")
+        log_activity("Modification Intervention", f"Intervention {old_nd} modifiÃ©e.")
+        flash(f"L'intervention {intervention.nd} a Ã©tÃ© modifiÃ©e avec succÃ¨s.", "success")
         return redirect(url_for('main.dashboard'))
         
     return render_template('team_leader/edit_intervention.html', intervention=intervention)
@@ -184,24 +184,34 @@ def edit_intervention(id):
 def delete_intervention(id):
     intervention = Intervention.query.get_or_404(id)
     
-    # Vérifier que le chef d'équipe a le droit de supprimer (ou admin)
+    # VÃ©rifier que le chef d'Ã©quipe a le droit de supprimer (ou admin)
     if not current_user.is_admin() and intervention.team_leader_id != current_user.id:
-        flash("Accès refusé.", "danger")
+        flash("AccÃ¨s refusÃ©.", "danger")
         return redirect(url_for('main.dashboard'))
         
-    # Suppression du fichier physique associé
+    # Suppression du fichier physique associÃ©
     if intervention.pdf_path and os.path.exists(intervention.pdf_path):
         try:
             os.remove(intervention.pdf_path)
         except Exception:
             pass # Si le fichier n'existe plus, on l'ignore
             
-    # Traçabilité
-    log_activity("Suppression Intervention", f"Intervention {intervention.nd} (Demande: {intervention.demande_no}) supprimée.")
+    # TraÃ§abilitÃ©
+    log_activity("Suppression Intervention", f"Intervention {intervention.nd} (Demande: {intervention.demande_no}) supprimÃ©e.")
     
-    # Suppression en base de données
+    # Suppression en base de donnÃ©es
     db.session.delete(intervention)
     db.session.commit()
     
-    flash("La fiche d'intervention a été supprimée avec succès.", "success")
+    flash("La fiche d'intervention a Ã©tÃ© supprimÃ©e avec succÃ¨s.", "success")
     return redirect(url_for('main.dashboard'))
+
+@bp.before_app_request
+def check_password_change():
+    if current_user.is_authenticated and getattr(current_user, 'must_change_password', False):
+        # Allow access to change password and logout
+        if request.endpoint and request.endpoint not in ['auth.change_password', 'auth.logout', 'static']:
+            flash("Veuillez configurer un nouveau mot de passe pour sécuriser votre compte.", "warning")
+            return redirect(url_for('auth.change_password'))
+
+

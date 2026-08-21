@@ -13,6 +13,7 @@ class User(UserMixin, db.Model):
     full_name = db.Column(db.String(100), nullable=False)
     team_id = db.Column(db.Integer, db.ForeignKey('teams.id'), nullable=True)
     is_active = db.Column(db.Boolean, default=True)
+    must_change_password = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime, nullable=True)
     
