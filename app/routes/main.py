@@ -113,6 +113,23 @@ def save_intervention():
     confidence = int(request.form.get('confidence_score', 0))
     extraction_method = request.form.get('extraction_method', 'manual')
     
+    # Règle anti-doublon : Même ND + Même Tâche + Même Numéro de demande
+    existing_intervention = Intervention.query.filter_by(
+        nd=nd, 
+        task_type=task_type, 
+        demande_no=demande_no
+    ).first()
+    
+    if existing_intervention:
+        flash(f"Impossible d'enregistrer : Une intervention avec ce ND ({nd}), cette tâche ({task_type}) et ce N° Demande ({demande_no}) existe déjà.", "danger")
+        # On peut optionnellement supprimer le fichier uploadé pour ne pas polluer le disque
+        if filepath and os.path.exists(filepath):
+            try:
+                os.remove(filepath)
+            except Exception:
+                pass
+        return redirect(url_for('main.dashboard'))
+    
     # Création de l'enregistrement
     from datetime import date
     new_intervention = Intervention(

@@ -77,7 +77,12 @@
                 {% endif %}
             </td>
             <td>
-                <a href="{{ url_for('main.edit_intervention', id=intervention.id) }}" class="btn-ghost" style="padding:4px 8px; font-size:12px; text-decoration:none;">✏️ Modifier</a>
+                <div style="display:flex; gap:8px;">
+                    <a href="{{ url_for('main.edit_intervention', id=intervention.id) }}" class="btn-ghost" style="padding:4px 8px; font-size:12px; text-decoration:none;">✏️ Modifier</a>
+                    <form action="{{ url_for('main.delete_intervention', id=intervention.id) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette fiche définitivement ? Cette action est irréversible.');" style="margin:0;">
+                        <button type="submit" class="btn-ghost" style="padding:4px 8px; font-size:12px; color:var(--danger); border:1px solid rgba(227,0,15,0.2);">🗑️ Supprimer</button>
+                    </form>
+                </div>
             </td>
         </tr>
         {% else %}
