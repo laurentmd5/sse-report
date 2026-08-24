@@ -47,7 +47,11 @@ def dashboard():
         # Dashboard Chef d'équipe
         interventions = Intervention.query.filter_by(
             team_leader_id=current_user.id
-        ).order_by(Intervention.intervention_date.desc()).all()
+        ).order_by(
+            Intervention.intervention_date.desc(),
+            Intervention.created_at.desc(),
+            Intervention.id.desc()
+        ).all()
         
         return render_template('team_leader/dashboard.html', interventions=interventions)
 
