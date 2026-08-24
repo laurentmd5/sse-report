@@ -6,7 +6,7 @@ database can continue to the tracked migrations.
 """
 
 revision = 'cd9dcd6b0d6d'
-down_revision = 'f09366ff3b17'
+down_revision = 'd9f8bfab93f9'
 branch_labels = None
 depends_on = None
 
