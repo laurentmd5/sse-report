@@ -73,7 +73,7 @@
             <td>{{ intervention.intervention_date.strftime('%d/%m/%Y') }}</td>
             <td class="nd">{{ intervention.nd }}</td>
             <td class="client">{{ intervention.client_name }}</td>
-            <td><span class="task-pill">{{ intervention.task_type }}</span></td>
+            <td><span class="task-pill">{{ intervention.task_confirmation }}</span></td>
             <td class="demande">{{ intervention.demande_no or '-' }}</td>
             <td>
                 {% if intervention.validation_status == 'validated' %}
