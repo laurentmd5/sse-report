@@ -27,7 +27,7 @@ def dashboard():
         now = datetime.now()
         stats = get_monthly_stats(now.year, now.month)
         
-        mois_fr = ["Janvier", "FÃ©vrier", "Mars", "Avril", "Mai", "Juin", "Juillet", "AoÃ»t", "Septembre", "Octobre", "Novembre", "DÃ©cembre"]
+        mois_fr = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"]
         month_str = f"{mois_fr[now.month - 1]} {now.year}"
         
         return render_template('admin/dashboard.html', stats=stats, month=month_str)
