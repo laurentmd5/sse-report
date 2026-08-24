@@ -19,11 +19,11 @@ def login():
         
         if user and bcrypt.check_password_hash(user.password_hash, password):
             if not user.is_active:
-                flash('Ce compte est dÃ©sactivÃ©.', 'danger')
+                flash('Ce compte est désactivé.', 'danger')
                 return redirect(url_for('auth.login'))
                 
             login_user(user, remember=True)
-            log_activity("Connexion", "L'utilisateur s'est connectÃ©.")
+            log_activity("Connexion", "L'utilisateur s'est connecté.")
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('main.dashboard'))
         else:
@@ -34,7 +34,7 @@ def login():
 @bp.route('/logout')
 @login_required
 def logout():
-    log_activity("DÃ©connexion", "L'utilisateur s'est dÃ©connectÃ©.")
+    log_activity("Déconnexion", "L'utilisateur s'est déconnecté.")
     logout_user()
     return redirect(url_for('auth.login'))
 
