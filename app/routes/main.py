@@ -11,6 +11,18 @@ from app import db
 
 bp = Blueprint('main', __name__)
 
+TASK_CONFIRMATION_OPTIONS = [
+    'SURVEY + RIT',
+    'RIT',
+    'SURVEY',
+    'Modification Intérieure',
+    'DOWNGRADE / UP/ RECONDUCTION / REconfiguration / FINALISATION',
+    'Passage',
+    'SAV',
+    'DIAG + REOR',
+    'Tirage GPON',
+]
+
 @bp.route('/')
 def index():
     if current_user.is_authenticated:
@@ -94,7 +106,8 @@ def upload():
             'team_leader/validation.html',
             filename=file.filename,
             filepath=filepath,
-            validation_data=validation_data
+            validation_data=validation_data,
+            task_confirmation_options=TASK_CONFIRMATION_OPTIONS
         )
     else:
         flash('Format de fichier non autorisé. Uniquement PDF.', 'danger')
@@ -107,11 +120,16 @@ def save_intervention():
     nd = request.form.get('nd')
     demande_no = request.form.get('demande_no')
     task_type = request.form.get('task_type')
+    task_confirmation = request.form.get('task_confirmation', '').strip()
     client_name = request.form.get('client_name')
     filename = request.form.get('filename')
     filepath = request.form.get('filepath')
     confidence = int(request.form.get('confidence_score', 0))
     extraction_method = request.form.get('extraction_method', 'manual')
+
+    if task_confirmation not in TASK_CONFIRMATION_OPTIONS:
+        flash("La confirmation de la tâche est obligatoire et doit correspondre à une valeur proposée.", "danger")
+        return redirect(url_for('main.dashboard'))
     
     # Règle anti-doublon : Même ND + Même Tâche + Même Numéro de demande
     existing_intervention = Intervention.query.filter_by(
@@ -137,6 +155,7 @@ def save_intervention():
         demande_no=demande_no,
         client_name=client_name,
         task_type=task_type,
+        task_confirmation=task_confirmation,
         team_leader_id=current_user.id,
         intervention_date=date.today(), # Par défaut, on pourrait l'extraire ou demander
         pdf_filename=filename,
@@ -168,8 +187,15 @@ def edit_intervention(id):
         old_nd = intervention.nd
         intervention.nd = request.form.get('nd')
         intervention.task_type = request.form.get('task_type')
+        task_confirmation = request.form.get('task_confirmation', '').strip()
         intervention.client_name = request.form.get('client_name')
         intervention.demande_no = request.form.get('demande_no')
+
+        if task_confirmation not in TASK_CONFIRMATION_OPTIONS:
+            flash("La confirmation de la tâche est obligatoire et doit correspondre à une valeur proposée.", "danger")
+            return redirect(url_for('main.edit_intervention', id=intervention.id))
+
+        intervention.task_confirmation = task_confirmation
         intervention.validation_status = 'corrected' # Marquer comme corrigé après coup
         
         db.session.commit()
@@ -177,7 +203,11 @@ def edit_intervention(id):
         flash(f"L'intervention {intervention.nd} a été modifiée avec succès.", "success")
         return redirect(url_for('main.dashboard'))
         
-    return render_template('team_leader/edit_intervention.html', intervention=intervention)
+    return render_template(
+        'team_leader/edit_intervention.html',
+        intervention=intervention,
+        task_confirmation_options=TASK_CONFIRMATION_OPTIONS
+    )
 
 @bp.route('/delete_intervention/<int:id>', methods=['POST'])
 @login_required

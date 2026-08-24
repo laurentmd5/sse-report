@@ -39,6 +39,18 @@
               <div class="source-tag filename">nom fichier</div>
             </div>
             <div class="val-row">
+              <div class="field-name">Confirmation de la tâche</div>
+              <div class="field-val">
+                <select name="task_confirmation" required>
+                  <option value="" selected disabled>-- Sélectionner la tâche --</option>
+                  {% for option in task_confirmation_options %}
+                  <option value="{{ option }}">{{ option }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="source-tag manual">obligatoire</div>
+            </div>
+            <div class="val-row">
               <div class="field-name">Client</div>
               <div class="field-val client"><input type="text" name="client_name" value="{{ validation_data.client_name or '' }}" required></div>
               <div class="source-tag filename">nom fichier</div>

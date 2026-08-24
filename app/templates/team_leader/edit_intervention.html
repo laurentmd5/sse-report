@@ -31,6 +31,17 @@
               <div class="field-val"><input type="text" name="task_type" value="{{ intervention.task_type }}" required></div>
             </div>
             <div class="val-row">
+              <div class="field-name">Confirmation de la tâche</div>
+              <div class="field-val">
+                <select name="task_confirmation" required>
+                  <option value="" disabled {% if not intervention.task_confirmation %}selected{% endif %}>-- Sélectionner la tâche --</option>
+                  {% for option in task_confirmation_options %}
+                  <option value="{{ option }}" {% if intervention.task_confirmation == option %}selected{% endif %}>{{ option }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="val-row">
               <div class="field-name">Client</div>
               <div class="field-val client"><input type="text" name="client_name" value="{{ intervention.client_name }}" required></div>
             </div>

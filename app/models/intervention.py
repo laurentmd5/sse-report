@@ -9,6 +9,7 @@ class Intervention(db.Model):
     demande_no = db.Column(db.String(20), nullable=True)
     client_name = db.Column(db.String(255), nullable=False)
     task_type = db.Column(db.String(50), nullable=False, index=True)
+    task_confirmation = db.Column(db.String(100), nullable=True)
     team_leader_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     intervention_date = db.Column(db.Date, nullable=False, index=True)
     pdf_filename = db.Column(db.String(255), nullable=True)

@@ -315,12 +315,14 @@ table.data td.client{color:var(--text-primary); font-weight:500;}
 .val-row .field-val{
   flex:1;
 }
-.val-row .field-val input {
+.val-row .field-val input,
+.val-row .field-val select {
     width: 100%; background: var(--bg-void); border: 1px solid var(--border);
     border-radius: var(--radius-sm); padding: 8px 10px; color: var(--text-primary);
     font-size: 14px; font-family: 'JetBrains Mono', monospace; font-weight:600;
 }
-.val-row .field-val input:focus { outline:none; border-color:var(--signal); box-shadow:0 0 0 2px var(--signal-glow); }
+.val-row .field-val input:focus,
+.val-row .field-val select:focus { outline:none; border-color:var(--signal); box-shadow:0 0 0 2px var(--signal-glow); }
 .val-row .field-val.client input { font-family: 'Inter', sans-serif; font-weight:500; }
 
 .source-tag{
