@@ -29,10 +29,10 @@ def preprocess_image(image_bytes):
 
     return binary
 
-def extract_pdf_data(pdf_path, target_pages=[0]):
+def extract_pdf_data(pdf_path, target_pages=[0, 1, 2]):
     """
     Extrait le numero de demande, le ND et le nom du client depuis le PDF.
-    Optimise pour la production : 1 seule page, DPI reduit, semaphore anti-surcharge.
+    Optimise pour la production : 3 pages max, DPI reduit, semaphore anti-surcharge.
     """
     start_time = time.time()
     extracted_demande = None
