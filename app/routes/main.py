@@ -123,13 +123,18 @@ def save_intervention():
     # Récupération des données du formulaire validé
     nd = request.form.get('nd')
     demande_no = request.form.get('demande_no')
-    task_type = request.form.get('task_type')
+    task_type = request.form.get('task_type', '').strip()
     task_confirmation = request.form.get('task_confirmation', '').strip()
     client_name = request.form.get('client_name')
     filename = request.form.get('filename')
     filepath = request.form.get('filepath')
     confidence = int(request.form.get('confidence_score', 0))
     extraction_method = request.form.get('extraction_method', 'manual')
+
+    # Si task_type est vide (parser n'a pas reconnu le format), on utilise
+    # la confirmation explicite de l'utilisateur comme source de vérité
+    if not task_type:
+        task_type = task_confirmation
 
     if task_confirmation not in TASK_CONFIRMATION_OPTIONS:
         flash("La confirmation de la tâche est obligatoire et doit correspondre à une valeur proposée.", "danger")
