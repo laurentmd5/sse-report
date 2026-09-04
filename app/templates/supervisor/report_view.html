@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Rapport Superviseur FTTH — {{ stats.period_label }}</title>
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #1a1a1a;
+        background: #fff;
+        margin: 0;
+        padding: 25px;
+        line-height: 1.4;
+      }
+      .header-report {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #003366;
+        padding-bottom: 12px;
+        margin-bottom: 20px;
+      }
+      .logo-title h1 {
+        margin: 0;
+        color: #003366;
+        font-size: 20px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .logo-title p {
+        margin: 3px 0 0;
+        color: #666;
+        font-size: 13px;
+      }
+      .badge-period {
+        background: #003366;
+        color: #fff;
+        padding: 6px 14px;
+        border-radius: 4px;
+        font-weight: 700;
+        font-size: 13px;
+      }
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 10px;
+        margin-bottom: 25px;
+      }
+      .kpi-box {
+        border: 1px solid #d9d9d9;
+        border-radius: 6px;
+        padding: 10px;
+        text-align: center;
+        background: #f8fafc;
+      }
+      .kpi-box .val {
+        font-size: 18px;
+        font-weight: bold;
+        color: #003366;
+      }
+      .kpi-box .lbl {
+        font-size: 11px;
+        color: #666;
+        margin-top: 4px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 25px;
+        font-size: 12px;
+      }
+      th, td {
+        border: 1px solid #e0e0e0;
+        padding: 8px 10px;
+        text-align: left;
+      }
+      th {
+        background: #003366;
+        color: #fff;
+        font-weight: 600;
+      }
+      tr:nth-child(even) {
+        background: #fcfcfc;
+      }
+      .total-row {
+        background: #e6f3fa !important;
+        font-weight: bold;
+      }
+      .text-center { text-align: center; }
+      .text-right { text-align: right; }
+      .btn-print {
+        background: #003366;
+        color: #fff;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      @media print {
+        .no-print { display: none !important; }
+        body { padding: 0; font-size: 11px; }
+        .kpi-grid { gap: 6px; }
+        .kpi-box .val { font-size: 15px; }
+      }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="margin-bottom: 15px; display:flex; justify-content:space-between; align-items:center;">
+        <a href="{{ url_for('supervisor.dashboard', period=stats.period_type, date=stats.current_ref_date) }}" style="color:#003366; text-decoration:none; font-weight:600;">← Retour au Dashboard</a>
+        <button class="btn-print" onclick="window.print()">🖨️ Imprimer / Enregistrer en PDF</button>
+    </div>
+
+    <div class="header-report">
+      <div class="logo-title">
+        <h1>SUIVI FTTH — RAPPORT D'ACTIVITÉ OPÉRATIONNELLE</h1>
+        <p>Généré le {{ stats.start_date }} | Sous-traitance FTTH</p>
+      </div>
+      <div class="badge-period">
+        {{ stats.period_label }}
+      </div>
+    </div>
+
+    <!-- Synthèse Chiffrée -->
+    <div class="kpi-grid">
+      <div class="kpi-box">
+        <div class="val">{{ stats.total_project_instances }}</div>
+        <div class="lbl">Total Projet</div>
+      </div>
+      <div class="kpi-box">
+        <div class="val">{{ stats.internal_total_instances }}</div>
+        <div class="lbl">Nos Instances</div>
+      </div>
+      <div class="kpi-box">
+        <div class="val">{{ stats.market_share_pct }}%</div>
+        <div class="lbl">Part de Marché</div>
+      </div>
+      <div class="kpi-box">
+        <div class="val" style="color:#2ecc71;">{{ stats.internal_recap_ok }}</div>
+        <div class="lbl">Installations (OK)</div>
+      </div>
+      <div class="kpi-box">
+        <div class="val" style="color:#e74c3c;">{{ stats.internal_recap_nok }}</div>
+        <div class="lbl">Passages (NOK)</div>
+      </div>
+      <div class="kpi-box">
+        <div class="val">{{ stats.internal_recap_taux }}%</div>
+        <div class="lbl">Taux Réussite</div>
+      </div>
+    </div>
+
+    <!-- Bilan Nos Équipes -->
+    <h3 style="color:#003366; font-size:14px; margin-bottom:8px;">1. PERFORMANCE DE NOS ÉQUIPES</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Chef d'équipe</th>
+          <th class="text-center">Planning</th>
+          <th class="text-center">SAV</th>
+          <th class="text-center">Total Confié</th>
+          <th>Tâches Principales</th>
+          <th class="text-center">Installations (OK)</th>
+          <th class="text-center">Passages / Blocages</th>
+          <th class="text-center">Taux Succès</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in stats.internal_teams_stats %}
+        <tr>
+          <td><strong>{{ t.leader_name }}</strong> ({{ t.team_name }})</td>
+          <td class="text-center">{{ t.planning_count }}</td>
+          <td class="text-center">{{ t.sav_count }}</td>
+          <td class="text-center"><strong>{{ t.total_instances }}</strong></td>
+          <td>
+            {% for tache_name, count in t.tasks_breakdown.items() %}
+              {{ tache_name }} ({{ count }}){% if not loop.last %}, {% endif %}
+            {% else %}-{% endfor %}
+          </td>
+          <td class="text-center" style="color:#2ecc71; font-weight:600;">{{ t.recap_ok }}</td>
+          <td class="text-center" style="color:#e74c3c; font-weight:600;">{{ t.recap_nok }}</td>
+          <td class="text-center"><strong>{{ t.recap_taux }}%</strong></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr class="total-row">
+          <td>TOTAL NOTRE STRUCTURE</td>
+          <td class="text-center">{{ stats.internal_planning_count }}</td>
+          <td class="text-center">{{ stats.internal_sav_count }}</td>
+          <td class="text-center">{{ stats.internal_total_instances }}</td>
+          <td>-</td>
+          <td class="text-center">{{ stats.internal_recap_ok }}</td>
+          <td class="text-center">{{ stats.internal_recap_nok }}</td>
+          <td class="text-center">{{ stats.internal_recap_taux }}%</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <!-- Positionnement Marché -->
+    <h3 style="color:#003366; font-size:14px; margin-bottom:8px;">2. CLASSEMENT MARCHÉ GLOBAL (TOP 15)</h3>
+    <table>
+      <thead>
+        <tr>
+          <th class="text-center" style="width:50px;">Rang</th>
+          <th>Équipe</th>
+          <th>Type</th>
+          <th class="text-center">Planning</th>
+          <th class="text-center">SAV</th>
+          <th class="text-center">Total Instances</th>
+          <th class="text-center">Part Projet</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in stats.all_teams_ranking[:15] %}
+        <tr {% if item.is_internal %}style="background:#e6f3fa; font-weight:bold;"{% endif %}>
+          <td class="text-center">#{{ item.rank }}</td>
+          <td>{{ item.raw_team_name }}</td>
+          <td>{% if item.is_internal %}★ NOTRE ÉQUIPE{% else %}Sous-traitant{% endif %}</td>
+          <td class="text-center">{{ item.planning }}</td>
+          <td class="text-center">{{ item.sav }}</td>
+          <td class="text-center">{{ item.total }}</td>
+          <td class="text-center">{{ (item.total / stats.total_project_instances * 100)|round(1) if stats.total_project_instances > 0 else 0 }}%</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div style="margin-top:30px; border-top:1px solid #ddd; padding-top:10px; font-size:11px; color:#888; text-align:center;">
+      Document confidentiel — Édité automatiquement par le système SUIVI FTTH
+    </div>
+</body>
+</html>

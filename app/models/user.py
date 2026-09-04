@@ -9,7 +9,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.Enum('admin', 'team_leader'), nullable=False)
+    role = db.Column(db.Enum('admin', 'team_leader', 'supervisor'), nullable=False)
     full_name = db.Column(db.String(100), nullable=False)
     team_id = db.Column(db.Integer, db.ForeignKey('teams.id'), nullable=True)
     is_active = db.Column(db.Boolean, default=True)
@@ -26,6 +26,9 @@ class User(UserMixin, db.Model):
         
     def is_team_leader(self):
         return self.role == 'team_leader'
+        
+    def is_supervisor(self):
+        return self.role == 'supervisor'
 
     def __repr__(self):
         return f'<User {self.username}>'

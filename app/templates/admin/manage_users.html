@@ -52,6 +52,8 @@
           <td>
             {% if u.role == 'admin' %}
               <span class="badge ok">Admin</span>
+            {% elif u.role == 'supervisor' %}
+              <span class="badge ok" style="background:rgba(0,174,239,0.15); color:var(--fiber); border:1px solid var(--fiber);">Superviseur</span>
             {% else %}
               <span class="badge pending">Chef d'équipe</span>
             {% endif %}
@@ -67,22 +69,29 @@
   </div>
 </div>
 
-<!-- Modal Nouvel Admin -->
+<!-- Modal Nouvel Utilisateur (Admin ou Superviseur) -->
 <div id="modal-add-admin" class="modal-overlay" onclick="if(event.target==this) this.classList.remove('active')">
   <div class="modal-content">
-    <h3 class="modal-title">Créer un Administrateur</h3>
+    <h3 class="modal-title">Créer un Utilisateur Spécial</h3>
     <form action="{{ url_for('admin.add_admin') }}" method="POST">
       <div class="field">
+        <label>Rôle du compte</label>
+        <select name="user_role" style="width:100%; padding:10px; border-radius:var(--radius-sm); border:1px solid var(--border-color); background:var(--bg-surface-2); color:var(--text-primary);" required>
+          <option value="supervisor" selected>Superviseur (Gestion & Pilotage des fichiers)</option>
+          <option value="admin">Administrateur (Gestion globale)</option>
+        </select>
+      </div>
+      <div class="field">
         <label>Nom complet</label>
-        <input type="text" name="admin_fullname" required>
+        <input type="text" name="admin_fullname" placeholder="Ex: Jean Dupont" required>
       </div>
       <div class="field">
         <label>Identifiant (Username)</label>
-        <input type="text" name="admin_username" required>
+        <input type="text" name="admin_username" placeholder="Ex: supervisor1" required>
       </div>
       <div class="field">
         <label>Email</label>
-        <input type="email" name="admin_email" required>
+        <input type="email" name="admin_email" placeholder="Ex: supervisor@netsysteme.sn" required>
       </div>
       <div class="field">
         <label>Mot de passe</label>
@@ -90,7 +99,7 @@
       </div>
       <div class="modal-actions">
         <button type="button" class="btn-ghost" onclick="document.getElementById('modal-add-admin').classList.remove('active')">Annuler</button>
-        <button type="submit" class="btn-primary" style="margin:0; width:auto; padding:9px 15px;">Créer Admin</button>
+        <button type="submit" class="btn-primary" style="margin:0; width:auto; padding:9px 15px;">Créer le Compte</button>
       </div>
     </form>
   </div>

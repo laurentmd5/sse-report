@@ -43,6 +43,8 @@ def dashboard():
         month_str = f"{mois_fr[now.month - 1]} {now.year}"
         
         return render_template('admin/dashboard.html', stats=stats, month=month_str)
+    elif current_user.is_supervisor():
+        return redirect(url_for('supervisor.dashboard'))
     else:
         # Dashboard Chef d'équipe
         interventions = Intervention.query.filter_by(

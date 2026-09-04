@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}Pilotage Superviseur — Suivi FTTH{% endblock %}
+
+{% block content %}
+<div class="bcbar signal">
+  <span class="pulse-dot"></span>
+  <span class="seg strong">Espace Superviseur</span>
+  <span class="sep">/</span>
+  <span class="seg">{{ stats.period_label }}</span>
+</div>
+
+<div class="app-shell">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="who">
+      <div class="avatar" style="color:var(--fiber); background:rgba(0,174,239,0.12);">SUP</div>
+      <div>
+        <div class="name">{{ current_user.full_name }}</div>
+        <div class="role">Superviseur Opérationnel FTTH</div>
+      </div>
+    </div>
+    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+        <a href="{{ url_for('supervisor.import_files') }}" class="btn-primary" style="padding:7px 14px; font-size:12px; margin:0;">📥 Importer Fichiers</a>
+        <a href="{{ url_for('supervisor.manage_aliases') }}" class="btn-ghost">🏷️ Alias Équipes</a>
+        <a href="{{ url_for('supervisor.history') }}" class="btn-ghost">📜 Historique</a>
+        <a href="{{ url_for('supervisor.report_view', period=stats.period_type, date=stats.current_ref_date) }}" class="btn-ghost" target="_blank">📄 Imprimer Rapport</a>
+        <a href="{{ url_for('supervisor.export_excel', period=stats.period_type, date=stats.current_ref_date) }}" class="btn-ghost" style="color:var(--signal); border-color:var(--signal);">📊 Export Excel</a>
+        <a href="{{ url_for('auth.logout') }}" class="btn-ghost danger">Déconnexion</a>
+    </div>
+  </div>
+
+  <!-- Barre de Filtres de Période -->
+  <div class="panel" style="padding:12px 18px; margin-bottom:1.5rem; background:var(--bg-surface-2);">
+    <form method="GET" action="{{ url_for('supervisor.dashboard') }}" style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:12px; font-weight:600; color:var(--text-tertiary);">PÉRIODE :</span>
+        <a href="{{ url_for('supervisor.dashboard', period='day', date=stats.current_ref_date) }}" class="btn-ghost {% if stats.period_type == 'day' %}active-tab{% endif %}" style="padding:5px 12px; font-size:12px;">Jour</a>
+        <a href="{{ url_for('supervisor.dashboard', period='week', date=stats.current_ref_date) }}" class="btn-ghost {% if stats.period_type == 'week' %}active-tab{% endif %}" style="padding:5px 12px; font-size:12px;">Semaine</a>
+        <a href="{{ url_for('supervisor.dashboard', period='month', date=stats.current_ref_date) }}" class="btn-ghost {% if stats.period_type == 'month' %}active-tab{% endif %}" style="padding:5px 12px; font-size:12px;">Mois</a>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:8px;">
+        <label for="date-select" style="font-size:12px; color:var(--text-tertiary);">Date de référence :</label>
+        <input type="date" id="date-select" name="date" value="{{ stats.current_ref_date }}" onchange="this.form.submit()" style="padding:5px 10px; border-radius:var(--radius-sm); border:1px solid var(--border-color); background:var(--bg-surface); color:var(--text-primary); font-family:inherit;">
+        <input type="hidden" name="period" value="{{ stats.period_type }}">
+      </div>
+    </form>
+  </div>
+
+  <!-- Cartes KPI Globales -->
+  <div class="admin-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom:1.5rem;">
+    <div class="kpi">
+      <div class="val" style="color:var(--signal)">{{ stats.internal_total_instances }} <span style="font-size:14px; font-weight:normal; color:var(--text-tertiary);">/ {{ stats.total_project_instances }}</span></div>
+      <div class="lbl">Instances Nos Équipes vs Projet</div>
+    </div>
+    <div class="kpi">
+      <div class="val" style="color:var(--fiber)">{{ stats.market_share_pct }}%</div>
+      <div class="lbl">Part d'Attribution Entreprise</div>
+    </div>
+    <div class="kpi">
+      <div class="val" style="color:#2ecc71">{{ stats.internal_recap_ok }}</div>
+      <div class="lbl">Installations Réalisées (OK)</div>
+    </div>
+    <div class="kpi">
+      <div class="val" style="color:var(--danger)">{{ stats.internal_recap_nok }}</div>
+      <div class="lbl">Passages / Blocages (NOK)</div>
+    </div>
+    <div class="kpi">
+      <div class="val" style="color:{% if stats.internal_recap_taux >= 50 %}#2ecc71{% else %}var(--warn){% endif %}">{{ stats.internal_recap_taux }}%</div>
+      <div class="lbl">Taux de Succès Récap (%)</div>
+    </div>
+    <div class="kpi">
+      <div class="val">{{ stats.total_teams_count }}</div>
+      <div class="lbl">Équipes Déployées au Total</div>
+    </div>
+  </div>
+
+  <!-- Bloc Faits Marquants & Comparatifs Clés -->
+  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:15px; margin-bottom:1.5rem;">
+    <div class="stat-card" style="border-left: 4px solid var(--fiber);">
+      <div class="lbl">ÉQUIPE LA PLUS CHARGÉE</div>
+      {% if stats.top_charged_internal %}
+        <div style="font-size:16px; font-weight:700; color:var(--text-primary); margin:4px 0;">{{ stats.top_charged_internal.leader_name }}</div>
+        <div style="font-size:12px; color:var(--text-tertiary);">
+          <strong>{{ stats.top_charged_internal.total_instances }} instances</strong> ({{ stats.top_charged_internal.planning_count }} Planning + {{ stats.top_charged_internal.sav_count }} SAV)
+        </div>
+      {% else %}
+        <div style="font-size:13px; color:var(--text-tertiary);">Aucune donnée</div>
+      {% endif %}
+    </div>
+
+    <div class="stat-card" style="border-left: 4px solid var(--warn);">
+      <div class="lbl">ÉQUIPE LA MOINS CHARGÉE</div>
+      {% if stats.least_charged_internal %}
+        <div style="font-size:16px; font-weight:700; color:var(--text-primary); margin:4px 0;">{{ stats.least_charged_internal.leader_name }}</div>
+        <div style="font-size:12px; color:var(--text-tertiary);">
+          <strong>{{ stats.least_charged_internal.total_instances }} instances</strong> ({{ stats.least_charged_internal.planning_count }} Planning + {{ stats.least_charged_internal.sav_count }} SAV)
+        </div>
+      {% else %}
+        <div style="font-size:13px; color:var(--text-tertiary);">Aucune donnée</div>
+      {% endif %}
+    </div>
+
+    <div class="stat-card" style="border-left: 4px solid #2ecc71;">
+      <div class="lbl">TOP INSTALLATIONS (OK)</div>
+      {% if stats.top_ok_internal and stats.top_ok_internal.recap_ok > 0 %}
+        <div style="font-size:16px; font-weight:700; color:#2ecc71; margin:4px 0;">{{ stats.top_ok_internal.leader_name }}</div>
+        <div style="font-size:12px; color:var(--text-tertiary);">
+          <strong>{{ stats.top_ok_internal.recap_ok }} installations</strong> ({{ stats.top_ok_internal.recap_taux }}% de succès)
+        </div>
+      {% else %}
+        <div style="font-size:13px; color:var(--text-tertiary);">En attente de récap</div>
+      {% endif %}
+    </div>
+
+    <div class="stat-card" style="border-left: 4px solid var(--danger);">
+      <div class="lbl">PLUS DE PASSAGES / BLOCAGES</div>
+      {% if stats.top_nok_internal and stats.top_nok_internal.recap_nok > 0 %}
+        <div style="font-size:16px; font-weight:700; color:var(--danger); margin:4px 0;">{{ stats.top_nok_internal.leader_name }}</div>
+        <div style="font-size:12px; color:var(--text-tertiary);">
+          <strong>{{ stats.top_nok_internal.recap_nok }} passages / blocages</strong> sur {{ stats.top_nok_internal.recap_cases }} cas
+        </div>
+      {% else %}
+        <div style="font-size:13px; color:var(--text-tertiary);">Aucun blocage signalé</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- TABLEAU 1 : NOS ÉQUIPES INTERNES -->
+  <div class="panel" style="margin-bottom:1.5rem;">
+    <div class="panel-header">
+      <h3>Détail de Nos Équipes Internes ({{ stats.internal_teams_stats|length }} équipes)</h3>
+      <span class="count">{{ stats.internal_total_instances }} instances attribuées</span>
+    </div>
+
+    <table class="data">
+      <thead>
+        <tr>
+          <th>Chef d'équipe / Équipe</th>
+          <th style="text-align:center;">Planning</th>
+          <th style="text-align:center;">SAV</th>
+          <th style="text-align:center;">Total Instances</th>
+          <th>Tâches Confiées (Planning)</th>
+          <th style="text-align:center;">Réalisé (OK)</th>
+          <th style="text-align:center;">Passage (NOK)</th>
+          <th style="text-align:center;">Taux % OK</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in stats.internal_teams_stats %}
+        <tr>
+          <td class="client">
+            <strong style="color:var(--text-primary);">{{ t.leader_name }}</strong>
+            <div style="font-size:11px; color:var(--text-tertiary);">{{ t.team_name }}</div>
+          </td>
+          <td style="text-align:center;"><span class="badge ok" style="background:rgba(0,174,239,0.12); color:var(--fiber);">{{ t.planning_count }}</span></td>
+          <td style="text-align:center;"><span class="badge pending">{{ t.sav_count }}</span></td>
+          <td style="text-align:center; font-weight:700; font-size:14px; color:var(--signal);">{{ t.total_instances }}</td>
+          <td>
+            <div style="display:flex; flex-wrap:wrap; gap:4px;">
+              {% for tache_name, count in t.tasks_breakdown.items() %}
+                <span class="task-pill" style="font-size:11px;">{{ tache_name }} ({{ count }})</span>
+              {% else %}
+                <span style="font-size:11px; color:var(--text-tertiary);">-</span>
+              {% endfor %}
+            </div>
+          </td>
+          <td style="text-align:center; font-weight:600; color:#2ecc71;">{{ t.recap_ok }}</td>
+          <td style="text-align:center; font-weight:600; color:var(--danger);">{{ t.recap_nok }}</td>
+          <td style="text-align:center;">
+            {% if t.recap_cases > 0 %}
+              <span class="badge" style="font-weight:700; background:{% if t.recap_taux >= 50 %}rgba(46,204,113,0.15); color:#2ecc71{% else %}rgba(255,165,0,0.15); color:var(--warn){% endif %};">
+                {{ t.recap_taux }}%
+              </span>
+            {% else %}
+              <span style="color:var(--text-tertiary); font-size:11px;">-</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" style="text-align:center; padding:25px; color:var(--text-tertiary);">
+            Aucune instance importée pour vos équipes sur cette période.<br>
+            <a href="{{ url_for('supervisor.import_files') }}" style="color:var(--fiber); text-decoration:none; font-weight:600;">Cliquez ici pour importer les fichiers Planning, SAV ou Récap</a>.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      {% if stats.internal_teams_stats %}
+      <tfoot>
+        <tr style="background:var(--bg-surface-2); font-weight:700;">
+          <td>TOTAL NOTRE STRUCTURE</td>
+          <td style="text-align:center;">{{ stats.internal_planning_count }}</td>
+          <td style="text-align:center;">{{ stats.internal_sav_count }}</td>
+          <td style="text-align:center; color:var(--signal);">{{ stats.internal_total_instances }}</td>
+          <td>-</td>
+          <td style="text-align:center; color:#2ecc71;">{{ stats.internal_recap_ok }}</td>
+          <td style="text-align:center; color:var(--danger);">{{ stats.internal_recap_nok }}</td>
+          <td style="text-align:center;">{{ stats.internal_recap_taux }}%</td>
+        </tr>
+      </tfoot>
+      {% endif %}
+    </table>
+  </div>
+
+  <!-- TABLEAU 2 : POSITIONNEMENT GLOBAL (TOUTES LES ÉQUIPES DU PROJET) -->
+  <div class="panel">
+    <div class="panel-header">
+      <h3>Classement Marché Global ({{ stats.all_teams_ranking|length }} équipes répertoriées)</h3>
+      <span class="count">{{ stats.total_project_instances }} instances globales</span>
+    </div>
+
+    <div style="max-height:450px; overflow-y:auto;">
+      <table class="data">
+        <thead>
+          <tr>
+            <th style="width:60px; text-align:center;">Rang</th>
+            <th>Nom de l'Équipe</th>
+            <th>Appartenance</th>
+            <th style="text-align:center;">Planning</th>
+            <th style="text-align:center;">SAV</th>
+            <th style="text-align:center;">Total Instances Confiées</th>
+            <th style="width:140px;">Part du Marché</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in stats.all_teams_ranking %}
+          <tr {% if item.is_internal %}style="background:rgba(0,174,239,0.08); border-left:3px solid var(--fiber);"{% endif %}>
+            <td style="text-align:center; font-weight:700;">#{{ item.rank }}</td>
+            <td class="client">
+              <strong>{{ item.raw_team_name }}</strong>
+            </td>
+            <td>
+              {% if item.is_internal %}
+                <span class="badge ok" style="background:var(--signal); color:#fff;">NOTRE ÉQUIPE</span>
+              {% else %}
+                <span style="font-size:11px; color:var(--text-tertiary);">Sous-traitant Externe</span>
+              {% endif %}
+            </td>
+            <td style="text-align:center;">{{ item.planning }}</td>
+            <td style="text-align:center;">{{ item.sav }}</td>
+            <td style="text-align:center; font-weight:700; font-size:13px;">{{ item.total }}</td>
+            <td>
+              {% set pct_indiv = (item.total / stats.total_project_instances * 100)|round(1) if stats.total_project_instances > 0 else 0 %}
+              <div style="display:flex; align-items:center; gap:6px;">
+                <div style="flex:1; height:6px; background:var(--bg-surface-2); border-radius:3px; overflow:hidden;">
+                  <div style="width:{{ pct_indiv * 4 }}%; max-width:100%; height:100%; background:{% if item.is_internal %}var(--fiber){% else %}var(--border-color){% endif %}; border-radius:3px;"></div>
+                </div>
+                <span style="font-size:11px; font-weight:600; color:var(--text-tertiary);">{{ pct_indiv }}%</span>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7" style="text-align:center; padding:20px; color:var(--text-tertiary);">Aucune donnée disponible.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<style>
+.active-tab {
+  background: var(--signal) !important;
+  color: #fff !important;
+  border-color: var(--signal) !important;
+}
+</style>
+{% endblock %}

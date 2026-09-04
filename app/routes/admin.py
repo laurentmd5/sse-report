@@ -100,34 +100,39 @@ def manage_users():
 
 @bp.route('/users/add_admin', methods=['POST'])
 def add_admin():
-    admin_fullname = request.form.get('admin_fullname')
-    admin_username = request.form.get('admin_username')
-    admin_email = request.form.get('admin_email')
-    admin_password = request.form.get('admin_password')
+    user_fullname = request.form.get('admin_fullname')
+    user_username = request.form.get('admin_username')
+    user_email = request.form.get('admin_email')
+    user_password = request.form.get('admin_password')
+    user_role = request.form.get('user_role', 'admin')
     
-    if User.query.filter_by(username=admin_username).first():
-        flash(f"L'identifiant '{admin_username}' existe déjà.", 'danger')
+    if user_role not in ['admin', 'supervisor']:
+        user_role = 'admin'
+    
+    if User.query.filter_by(username=user_username).first():
+        flash(f"L'identifiant '{user_username}' existe déjà.", 'danger')
         return redirect(url_for('admin.manage_users'))
         
-    if User.query.filter_by(email=admin_email).first():
-        flash(f"L'email '{admin_email}' est déjà utilisé.", 'danger')
+    if User.query.filter_by(email=user_email).first():
+        flash(f"L'email '{user_email}' est déjà utilisé.", 'danger')
         return redirect(url_for('admin.manage_users'))
         
     try:
-        hashed_password = bcrypt.generate_password_hash(admin_password).decode('utf-8')
-        new_admin = User(
-            username=admin_username,
-            email=admin_email,
+        hashed_password = bcrypt.generate_password_hash(user_password).decode('utf-8')
+        new_user = User(
+            username=user_username,
+            email=user_email,
             password_hash=hashed_password,
-            role='admin',
-            full_name=admin_fullname,
+            role=user_role,
+            full_name=user_fullname,
             must_change_password=True
         )
-        db.session.add(new_admin)
+        db.session.add(new_user)
         db.session.commit()
         
-        log_activity("Création Admin", f"Le compte administrateur '{admin_username}' a été créé.")
-        flash(f"L'administrateur '{admin_fullname}' a été créé avec succès !", 'success')
+        role_label = "Superviseur" if user_role == 'supervisor' else "Administrateur"
+        log_activity(f"Création {role_label}", f"Le compte '{user_username}' ({role_label}) a été créé.")
+        flash(f"Le compte '{user_fullname}' ({role_label}) a été créé avec succès !", 'success')
         
     except Exception as e:
         db.session.rollback()

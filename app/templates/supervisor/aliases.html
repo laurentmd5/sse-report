@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion des Alias d'Équipes — Superviseur{% endblock %}
+
+{% block content %}
+<div class="bcbar signal">
+  <span class="pulse-dot"></span>
+  <span class="seg strong">Superviseur</span>
+  <span class="sep">/</span>
+  <span class="seg">Alias & Correspondances d'Équipes</span>
+</div>
+
+<div class="app-shell">
+  <div class="topbar">
+    <div class="who">
+      <div class="avatar" style="color:var(--fiber); background:rgba(0,174,239,0.12);">ALS</div>
+      <div>
+        <div class="name">Gestion des Alias d'Équipes</div>
+        <div class="role">Association automatique des noms dans les fichiers Excel</div>
+      </div>
+    </div>
+    <div>
+      <a href="{{ url_for('supervisor.dashboard') }}" class="btn-ghost">📊 Retour Dashboard</a>
+      <a href="{{ url_for('supervisor.import_files') }}" class="btn-ghost">📥 Importer</a>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns: 1fr 2fr; gap:20px; align-items:start;">
+    
+    <!-- Formulaire d'ajout d'alias -->
+    <div class="panel">
+      <h3>Ajouter un Alias</h3>
+      <p style="font-size:12px; color:var(--text-tertiary); margin-bottom:15px;">
+        Si un nom d'équipe est écrit différemment dans un fichier Excel (ex: <em>ABLAYE BOUKAPAL DIOUF</em>), associez-le ici à l'équipe interne correspondante.
+      </p>
+
+      <form action="{{ url_for('supervisor.manage_aliases') }}" method="POST">
+        <div class="field">
+          <label>Équipe Interne</label>
+          <select name="team_id" required style="width:100%; padding:9px; border-radius:var(--radius-sm); border:1px solid var(--border-color); background:var(--bg-surface-2); color:var(--text-primary);">
+            <option value="" disabled selected>-- Sélectionner l'équipe --</option>
+            {% for t in teams %}
+              <option value="{{ t.id }}">{{ t.team_name }} ({{ t.team_leader.full_name if t.team_leader else 'Sans chef' }})</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Orthographe exacte dans le fichier Excel</label>
+          <input type="text" name="alias_name" placeholder="Ex: ABLAYE BOUKAPAL DIOUF" required style="width:100%; padding:9px; border-radius:var(--radius-sm); border:1px solid var(--border-color); background:var(--bg-surface-2); color:var(--text-primary);">
+        </div>
+
+        <button type="submit" class="btn-primary" style="width:100%; margin-top:10px; padding:10px;">
+          + Enregistrer l'Alias
+        </button>
+      </form>
+    </div>
+
+    <!-- Tableau des alias existants -->
+    <div class="panel">
+      <div class="panel-header">
+        <h3>Alias Actifs ({{ aliases|length }})</h3>
+      </div>
+
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Nom dans les Fichiers (Alias)</th>
+            <th>Équipe Interne Associée</th>
+            <th>Chef d'équipe</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in aliases %}
+          <tr>
+            <td class="client"><strong style="color:var(--signal);">{{ a.alias_name }}</strong></td>
+            <td><span class="badge ok">{{ a.team.team_name }}</span></td>
+            <td>{{ a.team.team_leader.full_name if a.team.team_leader else '-' }}</td>
+            <td>
+              <form action="{{ url_for('supervisor.delete_alias', id=a.id) }}" method="POST" onsubmit="return confirm('Supprimer cet alias ?');" style="margin:0;">
+                <button type="submit" class="btn-ghost" style="padding:3px 7px; font-size:11px; color:var(--danger); border-color:rgba(227,0,15,0.2);">Supprimer</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="4" style="text-align:center; padding:20px; color:var(--text-tertiary);">Aucun alias configuré. Le système utilise les noms exacts et la détection automatique par défaut.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

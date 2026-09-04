@@ -4,3 +4,10 @@ from app.models.team import Team
 from app.models.intervention import Intervention
 from app.models.activity import ActivityLog
 from app.models.ocr_log import OCRLog
+from app.models.supervisor import (
+    SupervisorDailyBatch,
+    SupervisorPlanningEntry,
+    SupervisorSAVEntry,
+    SupervisorRecapEntry,
+    TeamAlias
+)
