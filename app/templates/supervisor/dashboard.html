@@ -22,6 +22,7 @@
     </div>
     <div style="display:flex; flex-wrap:wrap; gap:8px;">
         <a href="{{ url_for('supervisor.import_files') }}" class="btn-primary" style="padding:7px 14px; font-size:12px; margin:0;">📥 Importer Fichiers</a>
+        <a href="{{ url_for('admin.manage_teams') }}" class="btn-ghost">👥 Équipes</a>
         <a href="{{ url_for('supervisor.manage_aliases') }}" class="btn-ghost">🏷️ Alias Équipes</a>
         <a href="{{ url_for('supervisor.history') }}" class="btn-ghost">📜 Historique</a>
         <a href="{{ url_for('supervisor.report_view', period=stats.period_type, date=stats.current_ref_date) }}" class="btn-ghost" target="_blank">📄 Imprimer Rapport</a>

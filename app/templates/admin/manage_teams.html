@@ -13,14 +13,19 @@
 <div class="app-shell">
   <div class="topbar">
     <div class="who">
-      <div class="avatar" style="color:var(--fiber)">AD</div>
+      <div class="avatar" style="color:var(--fiber)">{% if current_user.is_supervisor() %}SUP{% else %}AD{% endif %}</div>
       <div>
-        <div class="name">Administration</div>
-        <div class="role">Vue globale</div>
+        <div class="name">Gestion des Équipes</div>
+        <div class="role">{% if current_user.is_supervisor() %}Espace Superviseur{% else %}Administration{% endif %}</div>
       </div>
     </div>
     <div>
-        <a href="{{ url_for('main.dashboard') }}" class="btn-ghost" style="margin-right:8px;">Dashboard</a>
+        {% if current_user.is_supervisor() %}
+          <a href="{{ url_for('supervisor.dashboard') }}" class="btn-ghost" style="margin-right:8px;">📊 Dashboard Superviseur</a>
+        {% else %}
+          <a href="{{ url_for('admin.manage_users') }}" class="btn-ghost" style="margin-right:8px;">Utilisateurs</a>
+          <a href="{{ url_for('main.dashboard') }}" class="btn-ghost" style="margin-right:8px;">Dashboard Admin</a>
+        {% endif %}
         <a href="{{ url_for('auth.logout') }}" class="btn-ghost danger">Déconnexion</a>
     </div>
   </div>

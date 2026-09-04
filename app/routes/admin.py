@@ -9,10 +9,17 @@ bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 @bp.before_request
 @login_required
-def require_admin():
-    if not current_user.is_admin():
-        flash("Accès refusé. Vous devez être administrateur.", "danger")
-        return redirect(url_for('main.dashboard'))
+def require_admin_or_supervisor():
+    # Les routes de gestion des équipes sont accessibles aux Admins et aux Superviseurs
+    if request.endpoint in ['admin.manage_teams', 'admin.add_team', 'admin.toggle_team_status']:
+        if not (current_user.is_admin() or current_user.is_supervisor()):
+            flash("Accès refusé.", "danger")
+            return redirect(url_for('main.dashboard'))
+    else:
+        # Les autres routes (/admin/users, /admin/activities) restent strictement Admin
+        if not current_user.is_admin():
+            flash("Accès réservé aux administrateurs.", "danger")
+            return redirect(url_for('main.dashboard'))
 
 @bp.route('/teams')
 def manage_teams():
