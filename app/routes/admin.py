@@ -74,6 +74,11 @@ def add_team():
         new_leader.team_id = new_team.id
         
         db.session.commit()
+        
+        # Resynchroniser les imports superviseur existants
+        from app.services.supervisor_parser import resync_team_associations
+        resync_team_associations()
+        
         log_activity("Création Équipe", f"L'équipe '{team_name}' et le chef '{leader_username}' ont été créés.")
         flash(f"L'équipe '{team_name}' et le compte chef d'équipe ont été créés avec succès !", 'success')
         

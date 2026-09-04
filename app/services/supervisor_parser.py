@@ -90,6 +90,44 @@ def match_team_name(raw_name, team_data_cache=None):
     return None, False
 
 
+def resync_team_associations():
+    """
+    Met à jour toutes les entrées existantes en base (Planning, SAV, Récap)
+    pour réassocier automatiquement les équipes si de nouvelles équipes ou alias ont été créés après l'import.
+    """
+    from app.models.supervisor import SupervisorPlanningEntry, SupervisorSAVEntry, SupervisorRecapEntry
+    team_data_cache = get_internal_team_keywords()
+    
+    updated_count = 0
+    # 1. Planning
+    for entry in SupervisorPlanningEntry.query.all():
+        t_id, is_int = match_team_name(entry.raw_team_name, team_data_cache)
+        if entry.team_id != t_id or entry.is_internal_team != is_int:
+            entry.team_id = t_id
+            entry.is_internal_team = is_int
+            updated_count += 1
+            
+    # 2. SAV
+    for entry in SupervisorSAVEntry.query.all():
+        t_id, is_int = match_team_name(entry.raw_team_name, team_data_cache)
+        if entry.team_id != t_id or entry.is_internal_team != is_int:
+            entry.team_id = t_id
+            entry.is_internal_team = is_int
+            updated_count += 1
+            
+    # 3. Récap
+    for entry in SupervisorRecapEntry.query.all():
+        t_id, is_int = match_team_name(entry.raw_team_name, team_data_cache)
+        if entry.team_id != t_id or entry.is_internal_team != is_int:
+            entry.team_id = t_id
+            entry.is_internal_team = is_int
+            updated_count += 1
+            
+    if updated_count > 0:
+        db.session.commit()
+    return updated_count
+
+
 def parse_planning_excel(file_path):
     """
     Parse un fichier Excel de Planning Global FTTH.

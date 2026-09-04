@@ -18,7 +18,8 @@ from app.services.supervisor_parser import (
     parse_planning_excel,
     parse_sav_excel,
     parse_recap_excel,
-    parse_recap_image
+    parse_recap_image,
+    resync_team_associations
 )
 from app.services.supervisor_analytics import (
     get_supervisor_kpis,
@@ -38,6 +39,9 @@ def require_supervisor():
 
 @bp.route('/dashboard')
 def dashboard():
+    # Resynchronise automatiquement les entrées si de nouvelles équipes/alias ont été créés
+    resync_team_associations()
+    
     period_type = request.args.get('period', 'day')
     target_date = request.args.get('date')
     start_date = request.args.get('start_date')
