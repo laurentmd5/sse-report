@@ -207,13 +207,32 @@
 
   <!-- TABLEAU 2 : POSITIONNEMENT GLOBAL (TOUTES LES ÉQUIPES DU PROJET) -->
   <div class="panel">
-    <div class="panel-header">
-      <h3>Classement Marché Global ({{ stats.all_teams_ranking|length }} équipes répertoriées)</h3>
-      <span class="count">{{ stats.total_project_instances }} instances globales</span>
+    <div class="panel-header" style="flex-wrap:wrap; gap:12px; align-items:center;">
+      <div>
+        <h3 style="margin:0;">Classement Marché Global (<span id="total-teams-count">{{ stats.all_teams_ranking|length }}</span> équipes répertoriées)</h3>
+        <div style="font-size:11.5px; color:var(--text-tertiary); margin-top:3px;"><span id="visible-teams-count">{{ stats.all_teams_ranking|length }}</span> affichée(s) &bull; {{ stats.total_project_instances }} instances globales</div>
+      </div>
+      
+      <!-- Barre de recherche et filtres rapides -->
+      <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
+        <!-- Filtres rapides -->
+        <div style="display:flex; gap:4px;">
+          <button type="button" class="btn-ghost filter-chip active-filter" onclick="setTeamFilter('all', this)" style="padding:4px 9px; font-size:11px;">Toutes</button>
+          <button type="button" class="btn-ghost filter-chip" onclick="setTeamFilter('internal', this)" style="padding:4px 9px; font-size:11px; color:var(--fiber);">⭐ Nos Équipes</button>
+          <button type="button" class="btn-ghost filter-chip" onclick="setTeamFilter('external', this)" style="padding:4px 9px; font-size:11px;">Externes</button>
+        </div>
+
+        <!-- Champ de recherche -->
+        <div style="position:relative; width:240px;">
+          <input type="text" id="searchTeamInput" placeholder="Rechercher une équipe..." onkeyup="filterTeamsTable()" style="width:100%; padding:6px 28px 6px 30px; border-radius:var(--radius-sm); border:1px solid var(--border-color); background:var(--bg-surface-2); color:var(--text-primary); font-size:12px; font-family:inherit;">
+          <span style="position:absolute; left:9px; top:50%; transform:translateY(-50%); font-size:12px; color:var(--text-tertiary); pointer-events:none;">🔍</span>
+          <button type="button" id="clearSearchBtn" onclick="clearTeamSearch()" style="display:none; position:absolute; right:7px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-tertiary); font-size:14px; cursor:pointer; padding:0 4px;">&times;</button>
+        </div>
+      </div>
     </div>
 
-    <div style="max-height:450px; overflow-y:auto;">
-      <table class="data">
+    <div style="max-height:480px; overflow-y:auto;">
+      <table class="data" id="allTeamsTable">
         <thead>
           <tr>
             <th style="width:60px; text-align:center;">Rang</th>
@@ -227,10 +246,10 @@
         </thead>
         <tbody>
           {% for item in stats.all_teams_ranking %}
-          <tr {% if item.is_internal %}style="background:rgba(0,174,239,0.08); border-left:3px solid var(--fiber);"{% endif %}>
+          <tr class="team-row" data-team-name="{{ item.raw_team_name|lower }}" data-is-internal="{{ '1' if item.is_internal else '0' }}" {% if item.is_internal %}style="background:rgba(0,174,239,0.08); border-left:3px solid var(--fiber);"{% endif %}>
             <td style="text-align:center; font-weight:700;">#{{ item.rank }}</td>
             <td class="client">
-              <strong>{{ item.raw_team_name }}</strong>
+              <strong class="team-name-text">{{ item.raw_team_name }}</strong>
             </td>
             <td>
               {% if item.is_internal %}
@@ -253,10 +272,15 @@
             </td>
           </tr>
           {% else %}
-          <tr>
+          <tr id="no-data-row">
             <td colspan="7" style="text-align:center; padding:20px; color:var(--text-tertiary);">Aucune donnée disponible.</td>
           </tr>
           {% endfor %}
+          <tr id="no-search-match-row" style="display:none;">
+            <td colspan="7" style="text-align:center; padding:25px; color:var(--text-tertiary);">
+              Aucune équipe trouvée pour cette recherche.
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -269,5 +293,79 @@
   color: #fff !important;
   border-color: var(--signal) !important;
 }
+.filter-chip.active-filter {
+  background: var(--signal) !important;
+  color: #fff !important;
+  border-color: var(--signal) !important;
+}
 </style>
+
+<script>
+let currentCategoryFilter = 'all';
+
+function setTeamFilter(category, buttonEl) {
+    currentCategoryFilter = category;
+    document.querySelectorAll('.filter-chip').forEach(btn => btn.classList.remove('active-filter'));
+    if (buttonEl) buttonEl.classList.add('active-filter');
+    filterTeamsTable();
+}
+
+function clearTeamSearch() {
+    const input = document.getElementById('searchTeamInput');
+    input.value = '';
+    filterTeamsTable();
+}
+
+function filterTeamsTable() {
+    const input = document.getElementById('searchTeamInput');
+    const filterText = input.value.trim().toLowerCase();
+    const clearBtn = document.getElementById('clearSearchBtn');
+    
+    if (filterText.length > 0) {
+        clearBtn.style.display = 'block';
+    } else {
+        clearBtn.style.display = 'none';
+    }
+
+    const rows = document.querySelectorAll('#allTeamsTable tbody tr.team-row');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+        const teamName = row.getAttribute('data-team-name') || '';
+        const isInternal = row.getAttribute('data-is-internal') === '1';
+
+        // 1. Filtrage par catégorie
+        let matchesCategory = true;
+        if (currentCategoryFilter === 'internal') {
+            matchesCategory = isInternal;
+        } else if (currentCategoryFilter === 'external') {
+            matchesCategory = !isInternal;
+        }
+
+        // 2. Filtrage par texte de recherche
+        const matchesText = filterText === '' || teamName.includes(filterText);
+
+        if (matchesCategory && matchesText) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    const noMatchRow = document.getElementById('no-search-match-row');
+    if (noMatchRow) {
+        if (visibleCount === 0 && rows.length > 0) {
+            noMatchRow.style.display = '';
+        } else {
+            noMatchRow.style.display = 'none';
+        }
+    }
+
+    const counter = document.getElementById('visible-teams-count');
+    if (counter) {
+        counter.textContent = visibleCount;
+    }
+}
+</script>
 {% endblock %}
