@@ -19,10 +19,11 @@
         <div class="role">Admin et Chefs d'équipe</div>
       </div>
     </div>
-    <div>
+    <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
+        {% include "components/mode_switch.html" %}
         <a href="{{ url_for('admin.manage_teams') }}" class="btn-ghost">Équipes</a>
         <a href="{{ url_for('admin.view_activities') }}" class="btn-ghost">Activités</a>
-        <a href="{{ url_for('main.dashboard') }}" class="btn-ghost" style="margin-right:8px;">Retour Dashboard</a>
+        <a href="{{ url_for('main.dashboard') }}" class="btn-ghost">Retour Dashboard</a>
     </div>
   </div>
 

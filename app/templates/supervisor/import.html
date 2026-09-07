@@ -19,7 +19,8 @@
         <div class="role">Planning, SAV et Récapitulatif</div>
       </div>
     </div>
-    <div>
+    <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
+      {% include "components/mode_switch.html" %}
       <a href="{{ url_for('supervisor.dashboard') }}" class="btn-ghost">📊 Retour Dashboard</a>
       <a href="{{ url_for('supervisor.history') }}" class="btn-ghost">📜 Historique des Imports</a>
     </div>

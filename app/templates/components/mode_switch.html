@@ -1,0 +1,18 @@
+{% if can_switch_mode %}
+<div class="mode-switch-wrapper">
+  <div class="mode-switch-container" title="Basculer entre la vue Administrateur et la vue Superviseur">
+    <a href="{{ url_for('main.switch_mode', mode='admin') }}" 
+       class="mode-switch-btn {% if is_admin_mode %}active{% endif %}"
+       title="Accéder à l'espace Administrateur (Gestion équipes, utilisateurs, logs, stats globales)">
+      <span class="mode-switch-icon">🛡️</span>
+      <span class="mode-switch-label">Mode Admin</span>
+    </a>
+    <a href="{{ url_for('main.switch_mode', mode='supervisor') }}" 
+       class="mode-switch-btn {% if is_supervisor_mode %}active supervisor-active{% endif %}"
+       title="Accéder à l'espace Superviseur (Imports journaliers, récapitulatifs, planning, SAV, alias)">
+      <span class="mode-switch-icon">📊</span>
+      <span class="mode-switch-label">Mode Superviseur</span>
+    </a>
+  </div>
+</div>
+{% endif %}

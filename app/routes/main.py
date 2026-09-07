@@ -1,6 +1,6 @@
 import os
 from werkzeug.utils import secure_filename
-from flask import Blueprint, render_template, redirect, url_for, request, current_app, flash
+from flask import Blueprint, render_template, redirect, url_for, request, current_app, flash, session
 from flask_login import login_required, current_user
 from app.models.intervention import Intervention
 from app.services.parser import parse_filename
@@ -33,6 +33,9 @@ def index():
 @login_required
 def dashboard():
     if current_user.is_admin():
+        if session.get('active_mode') == 'supervisor':
+            return redirect(url_for('supervisor.dashboard'))
+
         from datetime import datetime
         from app.services.reporting import get_monthly_stats
         
@@ -56,6 +59,36 @@ def dashboard():
         ).all()
         
         return render_template('team_leader/dashboard.html', interventions=interventions)
+
+@bp.route('/switch-mode/<mode>')
+@login_required
+def switch_mode(mode):
+    if not current_user.is_admin():
+        flash("Action réservée aux administrateurs.", "danger")
+        return redirect(url_for('main.dashboard'))
+        
+    if mode not in ['admin', 'supervisor']:
+        flash("Mode sélectionné invalide.", "danger")
+        return redirect(url_for('main.dashboard'))
+        
+    session['active_mode'] = mode
+    if mode == 'supervisor':
+        flash("Mode Superviseur activé.", "info")
+        return redirect(url_for('supervisor.dashboard'))
+    else:
+        flash("Mode Administrateur activé.", "info")
+        return redirect(url_for('main.dashboard'))
+
+@bp.route('/toggle-mode')
+@login_required
+def toggle_mode():
+    if not current_user.is_admin():
+        flash("Action réservée aux administrateurs.", "danger")
+        return redirect(url_for('main.dashboard'))
+        
+    current_mode = session.get('active_mode', 'admin')
+    new_mode = 'supervisor' if current_mode == 'admin' else 'admin'
+    return redirect(url_for('main.switch_mode', mode=new_mode))
 
 @bp.route('/export_excel')
 @login_required

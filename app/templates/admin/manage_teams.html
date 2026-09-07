@@ -5,7 +5,7 @@
 {% block content %}
 <div class="bcbar signal">
   <span class="pulse-dot"></span>
-  <span class="seg strong">Administration</span>
+  <span class="seg strong">{% if is_supervisor_mode %}Superviseur{% else %}Administration{% endif %}</span>
   <span class="sep">/</span>
   <span class="seg">Gestion Équipes</span>
 </div>
@@ -13,18 +13,19 @@
 <div class="app-shell">
   <div class="topbar">
     <div class="who">
-      <div class="avatar" style="color:var(--fiber)">{% if current_user.is_supervisor() %}SUP{% else %}AD{% endif %}</div>
+      <div class="avatar" style="color:var(--fiber)">{% if is_supervisor_mode %}SUP{% else %}AD{% endif %}</div>
       <div>
         <div class="name">Gestion des Équipes</div>
-        <div class="role">{% if current_user.is_supervisor() %}Espace Superviseur{% else %}Administration{% endif %}</div>
+        <div class="role">{% if is_supervisor_mode %}Espace Superviseur{% else %}Administration{% endif %}</div>
       </div>
     </div>
-    <div>
-        {% if current_user.is_supervisor() %}
-          <a href="{{ url_for('supervisor.dashboard') }}" class="btn-ghost" style="margin-right:8px;">📊 Dashboard Superviseur</a>
+    <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
+        {% include "components/mode_switch.html" %}
+        {% if is_supervisor_mode %}
+          <a href="{{ url_for('supervisor.dashboard') }}" class="btn-ghost">📊 Dashboard Superviseur</a>
         {% else %}
-          <a href="{{ url_for('admin.manage_users') }}" class="btn-ghost" style="margin-right:8px;">Utilisateurs</a>
-          <a href="{{ url_for('main.dashboard') }}" class="btn-ghost" style="margin-right:8px;">Dashboard Admin</a>
+          <a href="{{ url_for('admin.manage_users') }}" class="btn-ghost">Utilisateurs</a>
+          <a href="{{ url_for('main.dashboard') }}" class="btn-ghost">Dashboard Admin</a>
         {% endif %}
         <a href="{{ url_for('auth.logout') }}" class="btn-ghost danger">Déconnexion</a>
     </div>

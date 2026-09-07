@@ -495,3 +495,78 @@ table.data td.client{color:var(--text-primary); font-weight:500;}
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* ================= COMMUTATEUR DE MODE ADMIN / SUPERVISEUR ================= */
+.mode-switch-wrapper {
+  display: inline-flex;
+  align-items: center;
+}
+
+.mode-switch-container {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-surface-3);
+  padding: 3px;
+  border-radius: 30px;
+  border: 1.5px solid var(--border);
+  gap: 3px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.mode-switch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 24px;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--text-secondary);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.mode-switch-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.4);
+}
+
+[data-theme="dark"] .mode-switch-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.mode-switch-btn.active {
+  background: var(--signal);
+  color: var(--btn-text) !important;
+  box-shadow: 0 2px 8px var(--signal-glow);
+  cursor: default;
+}
+
+.mode-switch-btn.active.supervisor-active {
+  background: #0284c7;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35);
+}
+
+.mode-switch-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+@media (max-width: 768px) {
+  .mode-switch-wrapper {
+    width: 100%;
+  }
+  .mode-switch-container {
+    width: 100%;
+    justify-content: center;
+  }
+  .mode-switch-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 7px 10px;
+    font-size: 12px;
+  }
+}
+

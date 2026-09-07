@@ -42,4 +42,23 @@ def create_app(config_class=Config):
     from app.routes.supervisor import bp as supervisor_bp
     app.register_blueprint(supervisor_bp)
 
+    @app.context_processor
+    def inject_user_mode():
+        from flask import session
+        from flask_login import current_user
+        if current_user.is_authenticated and current_user.is_admin():
+            mode = session.get('active_mode', 'admin')
+            return {
+                'can_switch_mode': True,
+                'active_mode': mode,
+                'is_admin_mode': mode == 'admin',
+                'is_supervisor_mode': mode == 'supervisor'
+            }
+        return {
+            'can_switch_mode': False,
+            'active_mode': current_user.role if current_user.is_authenticated else None,
+            'is_admin_mode': False,
+            'is_supervisor_mode': current_user.role == 'supervisor' if current_user.is_authenticated else False
+        }
+
     return app

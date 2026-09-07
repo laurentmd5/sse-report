@@ -14,13 +14,14 @@
   <!-- Topbar -->
   <div class="topbar">
     <div class="who">
-      <div class="avatar" style="color:var(--fiber); background:rgba(0,174,239,0.12);">SUP</div>
+      <div class="avatar" style="color:var(--fiber); background:rgba(0,174,239,0.12);">{% if can_switch_mode %}AD{% else %}SUP{% endif %}</div>
       <div>
         <div class="name">{{ current_user.full_name }}</div>
-        <div class="role">Superviseur Opérationnel FTTH</div>
+        <div class="role">Superviseur Opérationnel FTTH {% if can_switch_mode %}<span style="color:var(--signal); font-weight:600;">(Vue Admin)</span>{% endif %}</div>
       </div>
     </div>
-    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+    <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
+        {% include "components/mode_switch.html" %}
         <a href="{{ url_for('supervisor.import_files') }}" class="btn-primary" style="padding:7px 14px; font-size:12px; margin:0;">📥 Importer Fichiers</a>
         <a href="{{ url_for('admin.manage_teams') }}" class="btn-ghost">👥 Équipes</a>
         <a href="{{ url_for('supervisor.manage_aliases') }}" class="btn-ghost">🏷️ Alias Équipes</a>

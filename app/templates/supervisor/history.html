@@ -19,7 +19,8 @@
         <div class="role">Gestion et archivage des imports</div>
       </div>
     </div>
-    <div>
+    <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
+      {% include "components/mode_switch.html" %}
       <a href="{{ url_for('supervisor.dashboard') }}" class="btn-ghost">📊 Retour Dashboard</a>
       <a href="{{ url_for('supervisor.import_files') }}" class="btn-primary" style="padding:7px 14px; font-size:12px; margin:0;">📥 Nouvel Import</a>
     </div>
