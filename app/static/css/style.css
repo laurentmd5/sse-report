@@ -185,6 +185,51 @@ body{
   font-size:14px; font-family:'Inter', sans-serif; transition:border-color .15s;
 }
 .field input:focus, .field select:focus{outline:none; border-color:var(--signal); box-shadow:0 0 0 3px var(--signal-glow);}
+
+/* Password toggle with eye icon */
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+.password-wrapper input {
+  width: 100%;
+  padding-right: 42px !important;
+}
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  color: var(--text-tertiary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, transform 0.15s;
+  z-index: 5;
+  border-radius: 4px;
+}
+.password-toggle:hover {
+  color: var(--text-primary);
+}
+.password-toggle:focus-visible {
+  outline: 2px solid var(--fiber);
+}
+.password-toggle svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .btn-primary{
   width:100%; padding:12px; border:none; border-radius:var(--radius-sm);
   background:var(--signal); color:var(--btn-text); font-weight:700; font-size:14px;

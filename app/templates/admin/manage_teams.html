@@ -116,7 +116,12 @@
                 </div>
                 <div class="field">
                     <label>Mot de passe *</label>
-                    <input type="text" name="leader_password" placeholder="Mot de passe" required>
+                    <div class="password-wrapper">
+                        <input type="password" id="leader_password" name="leader_password" placeholder="Mot de passe" required minlength="6">
+                        <button type="button" class="password-toggle" onclick="togglePassword('leader_password', this)" title="Afficher le mot de passe" aria-label="Afficher le mot de passe">
+                            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </button>
+                    </div>
                 </div>
             </div>
             

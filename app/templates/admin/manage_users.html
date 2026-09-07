@@ -95,7 +95,12 @@
       </div>
       <div class="field">
         <label>Mot de passe</label>
-        <input type="password" name="admin_password" required minlength="6">
+        <div class="password-wrapper">
+          <input type="password" id="admin_password" name="admin_password" required minlength="6">
+          <button type="button" class="password-toggle" onclick="togglePassword('admin_password', this)" title="Afficher le mot de passe" aria-label="Afficher le mot de passe">
+            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          </button>
+        </div>
       </div>
       <div class="modal-actions">
         <button type="button" class="btn-ghost" onclick="document.getElementById('modal-add-admin').classList.remove('active')">Annuler</button>
@@ -116,7 +121,12 @@
       </div>
       <div class="field">
         <label>Nouveau Mot de passe</label>
-        <input type="password" name="new_password" required minlength="6">
+        <div class="password-wrapper">
+          <input type="password" id="reset_password_val" name="new_password" required minlength="6">
+          <button type="button" class="password-toggle" onclick="togglePassword('reset_password_val', this)" title="Afficher le mot de passe" aria-label="Afficher le mot de passe">
+            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          </button>
+        </div>
       </div>
       <div class="modal-actions">
         <button type="button" class="btn-ghost" onclick="document.getElementById('modal-reset').classList.remove('active')">Annuler</button>
